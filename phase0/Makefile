@@ -9,12 +9,12 @@ BIN := build
 
 TOOLS := po32_decode_capture po32_demo po32_pattern_editor
 
-all: $(addprefix $(BIN)/,$(TOOLS)) $(BIN)/diag
+all: $(addprefix $(BIN)/,$(TOOLS)) $(BIN)/diag $(BIN)/frame
 
 $(BIN)/%: $(LIB)/examples/%.c $(SRC) | $(BIN)
 	$(CC) $(CFLAGS) -I$(LIB)/include -I$(LIB)/src $< $(SRC) -lm -o $@
 
-$(BIN)/diag: diag.c $(SRC) | $(BIN)
+$(BIN)/%: %.c $(SRC) | $(BIN)
 	$(CC) $(CFLAGS) -I$(LIB)/include -I$(LIB)/src $< $(SRC) -lm -o $@
 
 $(BIN):
