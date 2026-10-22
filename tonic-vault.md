@@ -17,7 +17,7 @@ Plan: compile it to WASM and use it for decode, encode, and in-browser playback.
 
 ## Device model (what we store)
 
-- **Sounds:** the 16 sounds on the device. Only one set of 16 is on the Tonic at a time. The code calls a saved set a "kit"; the UI always says "sounds". Each sound has left/right patch endpoints, and the morph knob blends between them.
+- **Sounds:** the 16 sounds on the device. Only one set of 16 is on the Tonic at a time. The vault saves each distinct set of 16 as a sound set. Each sound has left/right patch endpoints, and the morph knob blends between them.
 - **Pattern:** 16 steps × 4 lanes, plus per-step morph pairs (parameter locks) and an accent bitmask. Each pattern packet carries its own slot number.
   - Lanes are channel columns: sounds 1/5/9/13, 2/6/10/14, 3/7/11/15, and 4/8/12/16. Only one sound per lane can fire on a step.
   - Each trigger byte has a 1–15 `fill_rate` in its low nibble, most likely the guide's step multiplier (hold step + m). Phase 0 confirms it.
@@ -31,16 +31,16 @@ The vault is a single JSON document. It lives in localStorage and can be downloa
 ```json
 {
 	"version": 1,
-	"kits": [ { "id": "<hash>", "name": "factory", "sounds": [ /* 16 decoded patches + raw bytes */ ], "firstSeen": "", "lastSeen": "" } ],
-	"patterns": [ { "id": "<hash>", "name": "", "tags": [], "bpm": 120, "swing": 20, "kitId": "<hash>", "slot": 9, "firstSeen": "", "lastSeen": "", "raw": "<base64 payload>" } ]
+	"soundSets": [ { "id": "<hash>", "name": "factory", "sounds": [ /* 16 decoded patches + raw bytes */ ], "firstSeen": "", "lastSeen": "" } ],
+	"patterns": [ { "id": "<hash>", "name": "", "tags": [], "bpm": 120, "swing": 20, "soundSetId": "<hash>", "slot": 9, "firstSeen": "", "lastSeen": "", "raw": "<base64 payload>" } ]
 }
 ```
 
-- A pattern's `id` is a hash of its normalized pattern bytes, excluding the slot number. A kit's `id` is a hash of its 16 normalized patches.
+- A pattern's `id` is a hash of its normalized pattern bytes, excluding the slot number. A sound set's `id` is a hash of its 16 normalized patches.
 - On import:
   - An unknown hash becomes a new entry.
   - A known hash in a different slot only updates `slot` and `lastSeen`.
-- `kitId` records which kit was loaded at capture time. There is no per-pattern kit tracking beyond that.
+- `soundSetId` records which sounds were loaded at capture time. There is no per-pattern sound tracking beyond that.
 - The app only knows what was on the Tonic as of the last import, so the UI says "last on tonic" rather than "on tonic".
 - Store the raw payload so the format can evolve without re-importing.
 
@@ -75,7 +75,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 ## Phases
 
 0. **Prove the protocol on the device.** Short, throwaway experiments against a real Tonic, run before building anything, to answer what the docs can't. Not done until each question has a recorded answer.
-   - Record the Tonic's own transfer over line in and decode it. Run `phase0/capture.sh <name>`, then press write + sound on the Tonic. It records until 2s of silence and decodes into `phase0/captures/<name>/`.
+   - Record the Tonic's own transfer and decode it, over the air first, then over a cable. Run `phase0/capture.sh <name> [seconds]`, then press write + sound on the Tonic. It records a fixed window (30s by default) and decodes into `phase0/captures/<name>/`. A full transfer takes about 30s, so use 90 when starting it by hand.
    - Confirm what one send contains: all 16 patterns? the sounds? state?
    - Re-render one pattern and send it back.
    - Find out whether slots that aren't sent are left untouched. Packets are addressed by slot, so this is likely. If not, the erase packet may be needed to clear slots on purpose.
@@ -92,9 +92,19 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 - `make -C phase0` builds libpo32's decoder, demo, and pattern editor natively with clang. cmake isn't needed.
 - Keep one real Tonic capture as a test fixture so decode work doesn't need a fresh transfer from the device each time. Captures land in the gitignored `phase0/captures/`. Copy the chosen one to `tests/fixtures/` when the test suite exists.
 
+## Connecting the Tonic
+
+The Tonic has 3.5mm stereo line in and line out. It also has a built-in speaker and microphone for over-the-air transfers.
+
+- **Import (Tonic line out → device input):** a plain stereo cable into a combo headphone/mic jack only registers as headphones, so the device gets no input. Use one of these:
+  - A TRRS headset splitter, plugging the Tonic's cable into the splitter's mic side. Works with a MacBook's combo jack, and with an iPhone through Apple's USB-C (or Lightning) to 3.5mm adapter, which accepts headset mics.
+  - A USB audio interface with a line input, on a computer or on an iPhone over USB-C. This is the most reliable option.
+  - Mic inputs expect a much quieter signal than line out, so start with the Tonic's volume low (bpm + 1–4) and raise it until decoding works.
+- **Export (device output → Tonic line in):** a plain 3.5mm stereo cable from the headphone output. On an iPhone, add the USB-C (or Lightning) to 3.5mm adapter.
+- **Sync mode:** leave the Tonic in SY0, the default. Other sync modes use one channel of line in or out for a sync pulse.
+
 ## Footguns
 
 - **Browser audio processing:** browsers apply echo cancellation, noise suppression, and auto gain to mic input by default. Request input with all three off, or the modem signal gets mangled.
 - **Sample rate:** the decoder takes the rate as a parameter. A 44.1 kHz demo frame resampled to 48 kHz stereo decoded to identical bytes, so pass the AudioContext rate through rather than resampling.
-- **Laptop input:** a plain stereo cable into a MacBook's headphone jack shows up as headphones only, with no input. Line capture needs a TRRS adapter or a USB audio interface, plus a careful input level.
 - **Untested inputs:** the over-the-air path and phone capture are less reliable. Get the cable path working first.

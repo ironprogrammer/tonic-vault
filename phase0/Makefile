@@ -1,4 +1,4 @@
-# Native builds of libpo32's example tools for the Phase 0 device tests.
+# Native builds of libpo32's example tools, plus diag, for the Phase 0 device tests.
 # cmake isn't required; clang is called directly.
 
 CC := /usr/bin/clang
@@ -9,9 +9,12 @@ BIN := build
 
 TOOLS := po32_decode_capture po32_demo po32_pattern_editor
 
-all: $(addprefix $(BIN)/,$(TOOLS))
+all: $(addprefix $(BIN)/,$(TOOLS)) $(BIN)/diag
 
 $(BIN)/%: $(LIB)/examples/%.c $(SRC) | $(BIN)
+	$(CC) $(CFLAGS) -I$(LIB)/include -I$(LIB)/src $< $(SRC) -lm -o $@
+
+$(BIN)/diag: diag.c $(SRC) | $(BIN)
 	$(CC) $(CFLAGS) -I$(LIB)/include -I$(LIB)/src $< $(SRC) -lm -o $@
 
 $(BIN):
