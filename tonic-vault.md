@@ -57,7 +57,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
   - On the results screen, show new / known / sounds match and prompt to name only new patterns.
 - **Export** (Tonic: acc + sound):
   - Compose the patterns to send on a 4×4 slot grid. The user picks the slot for each pattern. Gaps are fine, and nothing is auto-stacked from slot 1. Empty slots aren't sent.
-  - Optionally include the sounds.
+  - Optionally include the sounds. The Tonic only accepts sounds followed by at least one pattern and a state packet, so including sounds also sends tempo, swing, and the chain.
   - Send tempo/swing taken from slot 1's pattern.
   - Choose cable or speaker.
   - Put the Tonic in receive mode first, then tap send in the app.
@@ -83,7 +83,8 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - What one send contains: 32 patch packets (16 sounds × left/right), all 16 patterns (empty ones included), and one state packet. Confirmed on the Tonic, and TE's full backup WAV matches. TE's sound pack WAVs carry 16 patch packets, one pattern for slot 1, and a state packet that sets tempo.
    - Sending to the Tonic works over a plain stereo cable from the Mac's headphone out, at 75% Mac volume. Playing a captured backup WAV restores it.
      - libpo32's rendered audio stops on the final tail's last bit, and the Tonic shows err at the end of the transfer. The Tonic's own transfers keep the carrier going for about 25 ms after the tail. Appending 4 bytes of `0x55` after the tail fixes it. The preamble length doesn't matter.
-     - A single pattern packet, with no sounds or state packet, is accepted.
+     - A single pattern packet, with no sounds or state packet, is accepted. The Tonic shows "end" on success and "err" on failure.
+     - Sounds need a pattern and a state packet after them. Sounds alone, sounds + state, and sounds + pattern all show err. Sounds + pattern + state works, which is also the shape of TE's sound packs.
    - Slots that aren't sent are left untouched. Sending only pattern 8 changed pattern 8 and nothing else, including the sounds.
    - `fill_rate` is the multiplier (see Device model). Confirmed with steps set to each value.
    - Find out whether recorded effects appear in the 16 reserved bytes. In the first Tonic capture only slot 9's are nonzero (`02 02 02 02 00 00 00 72`, then zeros), Slot 9 has effect 12 (beat-repeat faster) recorded, so this is effect data. The encoding isn't worked out yet, but it doesn't block Phase 1: the vault stores the raw payload and resends these bytes unchanged.
@@ -116,5 +117,6 @@ The Tonic has 3.5mm stereo line in and line out. It also has a built-in speaker 
 
 - **Browser audio processing:** browsers apply echo cancellation, noise suppression, and auto gain to mic input by default. Request input with all three off, or the modem signal gets mangled.
 - **Sample rate:** the decoder takes the rate as a parameter. A 44.1 kHz demo frame resampled to 48 kHz stereo decoded to identical bytes, so pass the AudioContext rate through rather than resampling.
+- **Sounds need company:** a transfer with sounds must also carry a pattern and a state packet, or the Tonic shows err.
 - **Trailing carrier:** append about 4 bytes of carrier after the final tail when rendering, or the Tonic rejects the transfer at the very end (see Phase 0).
 - **Untested inputs:** the over-the-air path and phone capture are less reliable. Get the cable path working first.

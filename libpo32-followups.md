@@ -15,6 +15,10 @@ Repro: `phase0/build/frame` with `TRAIL=0` errors, and with the default `TRAIL=4
 
 Likely fix: have `po32_builder_finish` or `po32_render_sample_count` add a short carrier postamble, or document that callers need one.
 
+## Sounds need a pattern and a state packet
+
+Not a libpo32 bug, but worth documenting there. The Tonic shows err for a transfer of patch packets alone, patches + state, or patches + pattern. Patches + pattern + state works. A lone pattern packet works.
+
 ## Chains longer than 16 are rejected
 
 The state packet's chain holds up to 64 entries (the guide allows chaining 64 patterns), but the typed state decode rejects `pattern_count` over 16 (`PO32_PATTERN_STEP_COUNT`). TE's full backup WAV has a 22-entry chain that hits this.
