@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { loadDecoder, TAG } from '../po32.js';
+import { emptyVault, importTransfer } from '../vault.js';
 
 const wasmUrl = new URL('../po32.wasm', import.meta.url);
 const fixtureUrl = new URL('../../tests/fixtures/tonic-backup-2026-10-22.wav', import.meta.url);
@@ -23,24 +25,39 @@ function readWav(buf) {
 	throw new Error('no data chunk');
 }
 
-test('decodes the fixture backup in chunks', async () => {
-	const { instance } = await WebAssembly.instantiate(await readFile(wasmUrl));
-	const po32 = instance.exports;
+// Streams the fixture through the decoder in 128-sample blocks, like an AudioWorklet delivers them.
+async function decodeFixture() {
+	const decoder = await loadDecoder(await readFile(wasmUrl));
 	const { rate, samples } = readWav(await readFile(fixtureUrl));
-	const cap = po32.input_capacity();
-	po32.decoder_init(rate);
-	let done = 0;
-	for (let i = 0; i < samples.length && !done; i += cap) {
-		const chunk = samples.subarray(i, i + cap);
-		new Float32Array(po32.memory.buffer, po32.input_buffer(), cap).set(chunk);
-		done = po32.decoder_push(chunk.length);
+	decoder.reset(rate);
+	const packets = [];
+	let done = false;
+	for (let i = 0; i < samples.length && !done; i += 128) {
+		const out = decoder.push(samples.subarray(i, i + 128));
+		packets.push(...out.packets);
+		done = out.done;
 	}
-	assert.equal(done, 1);
+	return { done, packets };
+}
 
+test('decodes the fixture backup', async () => {
+	const { done, packets } = await decodeFixture();
+	assert.equal(done, true);
 	const tags = {};
-	for (let i = 0; i < po32.packet_count(); i++) {
-		const tag = po32.packet_tag(i);
-		tags[tag] = (tags[tag] || 0) + 1;
-	}
-	assert.deepEqual(tags, { 0x37b2: 32, 0xd022: 16, 0x505a: 1 });
+	for (const { tag } of packets) tags[tag] = (tags[tag] || 0) + 1;
+	assert.deepEqual(tags, { [TAG.patch]: 32, [TAG.pattern]: 16, [TAG.state]: 1 });
+});
+
+test('a second import of the same transfer finds nothing new', async () => {
+	const { packets } = await decodeFixture();
+	const vault = emptyVault();
+	const first = await importTransfer(vault, packets);
+	assert.ok(first.newPatterns.length > 0);
+	assert.equal(first.newSoundSet, true);
+
+	const second = await importTransfer(vault, packets);
+	assert.equal(second.newPatterns.length, 0);
+	assert.equal(second.knownPatterns.length, first.newPatterns.length);
+	assert.equal(second.newSoundSet, false);
+	assert.equal(vault.patterns.length, first.newPatterns.length);
 });
