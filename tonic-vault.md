@@ -22,7 +22,7 @@ Plan: compile it to WASM and use it for decode, encode, and in-browser playback.
   - Lanes are channel columns: sounds 1/5/9/13, 2/6/10/14, 3/7/11/15, and 4/8/12/16. Only one sound per lane can fire on a step.
   - Each trigger byte has a 1–15 `fill_rate` in its low nibble, most likely the guide's step multiplier (hold step + m). Phase 0 confirms it.
   - There are 16 reserved bytes that libpo32 writes as zeros.
-- **State:** tempo (one byte), swing (stored as swing × 12), morph defaults, and the chain as a list of zero-based pattern numbers, repeats included. libpo32's typed decode rejects lists longer than 16, so longer chains need a fix there or raw parsing. **Tempo and swing are global on the device.** At import, the current value is saved onto each new pattern's metadata so browser playback is accurate. The user can edit it per pattern. There's no "intended tempo" concept.
+- **State:** tempo (one byte), swing (the Tonic shows 500–518, stored as 0–18; libpo32 calls it `swing_times_12`), morph defaults, and the chain as a list of zero-based pattern numbers, repeats included. libpo32's typed decode rejects lists longer than 16, so longer chains need a fix there or raw parsing. **Tempo and swing are global on the device.** At import, the current value is saved onto each new pattern's metadata so browser playback is accurate. The user can edit it per pattern. There's no "intended tempo" concept.
 
 ## Data model (initial)
 
@@ -83,7 +83,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Re-render one pattern and send it back.
    - Find out whether slots that aren't sent are left untouched. Packets are addressed by slot, so this is likely. If not, the erase packet may be needed to clear slots on purpose.
    - Confirm `fill_rate` is the multiplier. The first Tonic capture had no multipliers set (every step is 1).
-   - Find out whether recorded effects appear in the 16 reserved bytes. In the first Tonic capture only slot 9's are nonzero (`02 02 02 02 00 00 00 72`, then zeros), which looks like per-step effect data.
+   - Find out whether recorded effects appear in the 16 reserved bytes. In the first Tonic capture only slot 9's are nonzero (`02 02 02 02 00 00 00 72`, then zeros), Slot 9 has effect 12 (beat-repeat faster) recorded, so this is effect data. The encoding isn't worked out yet.
    - Chains are transferred, in the state packet (see Device model). The first Tonic capture's chain was a single pattern (6).
 1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON.
 2. **Library and playback.** The screens from the mock, with playback through the WASM synth. Installable as a PWA so it works on a phone.
@@ -94,7 +94,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 ## Development
 
 - `make -C phase0` builds libpo32's decoder, demo, and pattern editor natively with clang. cmake isn't needed.
-- Keep one real Tonic capture as a test fixture so decode work doesn't need a fresh transfer from the device each time. Captures land in the gitignored `phase0/captures/`. Copy the chosen one to `tests/fixtures/` when the test suite exists.
+- `tests/fixtures/tonic-backup-2026-10-22.wav` is a real Tonic backup (cable, 48 kHz mono, 49 packets) so decode work doesn't need a fresh transfer each time. New captures land in the gitignored `phase0/captures/`.
 
 ## Connecting the Tonic
 
