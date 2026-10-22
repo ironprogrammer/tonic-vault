@@ -56,9 +56,10 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
   - Show live level, stage progress, and errors.
   - On the results screen, show new / known / sounds match and prompt to name only new patterns.
 - **Export** (Tonic: acc + sound):
-  - Compose the patterns to send on a 4×4 slot grid. The user picks the slot for each pattern. Gaps are fine, and nothing is auto-stacked from slot 1. Empty slots aren't sent.
+  - Compose the patterns to send on a 4×4 slot grid. The user picks the slot for each pattern. Gaps are fine, and nothing is auto-stacked from slot 1. Empty slots aren't sent, and the Tonic keeps what's in them.
+  - Slots that won't be sent show, dimmed, what was last on the Tonic there. Filled slots show what they'll replace.
   - Optionally include the sounds. The Tonic only accepts sounds followed by at least one pattern and a state packet, so including sounds also sends tempo, swing, and the chain.
-  - Send tempo/swing taken from slot 1's pattern.
+  - Tempo, swing, and chain are one optional toggle, since a lone pattern lands fine without them and sending them replaces the Tonic's chain. Tempo and swing come from slot 1's pattern, and the chain defaults to the sent slots in order. The toggle is forced on when sounds are included.
   - Choose cable or speaker.
   - Put the Tonic in receive mode first, then tap send in the app.
   - Show progress with a stop button.
@@ -66,10 +67,12 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 - **Library:**
   - The sounds last seen on the Tonic shown in a 4×4 grid, with sounds you can audition.
   - Pattern list with a 16-step mini strip, bpm/swing, new badge, and play button.
-  - Multi-select to delete or add to export.
+  - Multi-select to delete or add to export. Adding several puts each in its original slot, and asks for a slot only when that one is already taken in the export.
   - Saved sounds list with delete.
   - Save/load `.json`.
-- **Pattern detail:** a sound-rows × 16-step grid showing hits, parameter locks, accent row, and playhead. Name, tags, editable bpm/swing, delete.
+- **Pattern detail:** a sound-rows × 16-step grid showing hits, parameter locks, multipliers (the number on the hit), an accent row, an effects row, and the playhead. Name, tags, editable bpm/swing, delete.
+  - Effects show only which steps have one, until the effect bytes are decoded. Playback doesn't reproduce effects, and the screen says so.
+  - "Add to export" opens a slot picker with the pattern's last slot preselected and slots already taken in the export marked.
 - **Style:** follow TE's PO-32 guide aesthetic: ochre ground, light hairlines, and thin lowercase type. Text and icons are cream instead of the guide's grey for contrast. Use the guide's own held key, pressed key, mic, and jack artwork, since it matches the device's buttons.
 - **Terms:** use the PO-32 guide's words for everything on the device: sounds, pattern, slot, accent, tempo, swing, multiplier, parameter lock, chain, transfer data, receive data, receive mode, backup, and restore. Button combos are written as the guide writes them ("press write + sound"). Factory sound names are the guide's, such as "shaker / zap" and "close / open hi-hat".
 
