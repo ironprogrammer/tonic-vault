@@ -1,0 +1,3 @@
+[submodule "vendor/libpo32"]
+	path = vendor/libpo32
+	url = https://github.com/ericlewis/libpo32
