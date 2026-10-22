@@ -10,6 +10,10 @@
 static int on_packet(const po32_packet_t *pkt, void *user) {
 	const double *t = user;
 	printf("%8.3fs packet %-7s len=%u\n", *t, po32_tag_name(pkt->tag_code), (unsigned)pkt->payload_len);
+	if (getenv("HEX")) {
+		for (size_t i = 0; i < pkt->payload_len; ++i) printf("%02x", pkt->payload[i]);
+		printf("\n");
+	}
 	return 0;
 }
 

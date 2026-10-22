@@ -20,9 +20,9 @@ Plan: compile it to WASM and use it for decode, encode, and in-browser playback.
 - **Sounds:** the 16 sounds on the device. Only one set of 16 is on the Tonic at a time. The vault saves each distinct set of 16 as a sound set. Each sound has left/right patch endpoints, and the morph knob blends between them.
 - **Pattern:** 16 steps × 4 lanes, plus per-step morph pairs (parameter locks) and an accent bitmask. Each pattern packet carries its own slot number.
   - Lanes are channel columns: sounds 1/5/9/13, 2/6/10/14, 3/7/11/15, and 4/8/12/16. Only one sound per lane can fire on a step.
-  - Each trigger byte has a 1–15 `fill_rate` in its low nibble, most likely the guide's step multiplier (hold step + m). Phase 0 confirms it.
+  - Each trigger byte's low nibble is the step multiplier (hold step + m), stored as the number the Tonic shows: t-01, t-02, t-03, t-04, t-06, and t-08 are 1, 2, 3, 4, 6, and 8. libpo32 calls it `fill_rate`.
   - There are 16 reserved bytes that libpo32 writes as zeros.
-- **State:** tempo (one byte), swing (the Tonic shows 500–518, stored as 0–18; libpo32 calls it `swing_times_12`), morph defaults, and the chain as a list of zero-based pattern numbers, repeats included. libpo32's typed decode rejects lists longer than 16, so longer chains need a fix there or raw parsing. **Tempo and swing are global on the device.** At import, the current value is saved onto each new pattern's metadata so browser playback is accurate. The user can edit it per pattern. There's no "intended tempo" concept.
+- **State:** tempo (one byte), swing (the Tonic shows 500–518, stored as 0–18; libpo32 calls it `swing_times_12`), morph defaults, and the chain as a list of zero-based pattern numbers, repeats included. libpo32's typed decode rejects lists longer than 16, so longer chains need a fix there or raw parsing. **Tempo and swing are global on the device.** In the vault they're per-pattern fields the user sets in pattern detail. Import fills them from the state packet as a starting value.
 
 ## Data model (initial)
 
@@ -51,6 +51,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 - **Import** (Tonic: write + sound):
   - Choose cable (Tonic line out → mic in) or over the air.
   - Choose the input device.
+  - Remind the user to check the Tonic's volume (bpm + 1–16) first. It resets whenever a cable is plugged in or the Tonic restarts.
   - Tap listen in the app first, then start the transfer on the Tonic.
   - Show live level, stage progress, and errors.
   - On the results screen, show new / known / sounds match and prompt to name only new patterns.
@@ -75,14 +76,14 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 ## Phases
 
 0. **Prove the protocol on the device.** Short, throwaway experiments against a real Tonic, run before building anything, to answer what the docs can't. Not done until each question has a recorded answer.
-   - Record the Tonic's own transfer and decode it, over the air first, then over a cable. Run `phase0/capture.sh <name> [seconds]`, then press write + sound on the Tonic. It records a fixed window (30s by default) and decodes into `phase0/captures/<name>/`. A full transfer takes about 35s, so use 90 when starting it by hand. `phase0/build/diag` shows where the demodulator syncs and loses lock.
+   - Record the Tonic's own transfer and decode it, over the air first, then over a cable. Run `phase0/capture.sh <name> [seconds]`, then press write + sound on the Tonic. It records a fixed window (30s by default) and decodes into `phase0/captures/<name>/`. A full transfer takes about 35s, so use 90 when starting it by hand. `phase0/build/diag` shows where the demodulator syncs and loses lock, and `HEX=1` prints each packet's payload, which recovers packets from a capture that lost lock partway.
      - Over the air into a MacBook mic (10.22): the preamble demodulated cleanly but the data didn't, so no packets. The same mic decoded libpo32's own render from the Mac's speakers.
      - TE's downloadable transfer WAVs decode with libpo32 (12 of 13), and their preamble is the same length as the Tonic's (about 256 bytes, versus libpo32's 124), so the format matches. The capture failed on signal quality.
      - Over a cable into the MacBook combo jack (10.22): all 49 packets decoded on the first try. See Connecting the Tonic for the cable.
    - What one send contains: 32 patch packets (16 sounds × left/right), all 16 patterns (empty ones included), and one state packet. Confirmed on the Tonic, and TE's full backup WAV matches. TE's sound pack WAVs carry 16 patch packets, one pattern for slot 1, and a state packet that sets tempo.
    - Re-render one pattern and send it back.
    - Find out whether slots that aren't sent are left untouched. Packets are addressed by slot, so this is likely. If not, the erase packet may be needed to clear slots on purpose.
-   - Confirm `fill_rate` is the multiplier. The first Tonic capture had no multipliers set (every step is 1).
+   - `fill_rate` is the multiplier (see Device model). Confirmed with steps set to each value.
    - Find out whether recorded effects appear in the 16 reserved bytes. In the first Tonic capture only slot 9's are nonzero (`02 02 02 02 00 00 00 72`, then zeros), Slot 9 has effect 12 (beat-repeat faster) recorded, so this is effect data. The encoding isn't worked out yet.
    - Chains are transferred, in the state packet (see Device model). The first Tonic capture's chain was a single pattern (6).
 1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON.
@@ -105,6 +106,7 @@ The Tonic has 3.5mm stereo line in and line out. It also has a built-in speaker 
   - A 4-pole headphone cable (the kind with an inline mic, 4-pole plugs on both ends) from the Tonic's line out into a MacBook combo jack. macOS shows it as "External Microphone". This decoded a full transfer at Tonic volume 12 (bpm + 12). At volume 4 the signal was close to silent.
   - A USB audio interface with a line input, on a computer or on an iPhone over USB-C. This is the most reliable option.
 - **Export (device output → Tonic line in):** a plain 3.5mm stereo cable from the headphone output. On an iPhone, add the USB-C (or Lightning) to 3.5mm adapter.
+- **Volume:** the Tonic resets its volume whenever a cable is plugged in or it restarts, so check it before every transfer.
 - **Sync mode:** leave the Tonic in SY0, the default. Other sync modes use one channel of line in or out for a sync pulse.
 
 ## Footguns
