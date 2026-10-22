@@ -68,16 +68,27 @@ function renderStages(packets, synced) {
 	}));
 }
 
+// Bars are peak levels, scaled so half of full scale fills the meter.
 function renderMeter(levels) {
 	$('meter').replaceChildren(...levels.map((v) => {
 		const bar = document.createElement('span');
-		bar.style.height = `${Math.min(1, v * 4) * 100}%`;
+		bar.style.height = `${Math.min(1, v * 2) * 100}%`;
 		return bar;
 	}));
 }
 
+// Transfers decoded reliably with peaks around 15% and up; 8% lost the signal partway.
+function levelText(peak) {
+	const pct = Math.round(peak * 100);
+	if (peak > 0.98) return `level ${pct}% · too loud, lower the volume`;
+	if (peak < 0.01) return 'no signal';
+	if (peak < 0.12) return `level ${pct}% · low, raise the volume`;
+	return `level ${pct}% · ok`;
+}
+
 async function listen() {
 	$('listen').disabled = true;
+	$('listen').textContent = 'listening…';
 	$('results').hidden = true;
 	let packets = [];
 	let synced = false;
@@ -86,19 +97,20 @@ async function listen() {
 
 	try {
 		capture = await startCapture((samples) => {
-			let sum = 0;
-			for (const s of samples) sum += s * s;
-			levels = [...levels.slice(1), Math.sqrt(sum / samples.length)];
+			let peak = 0;
+			for (const s of samples) peak = Math.max(peak, Math.abs(s));
+			levels = [...levels.slice(1), peak];
 
 			const out = decoder.push(samples);
 			if (out.synced && !synced) {
 				started = performance.now();
+				packets = [];
 				$('status').textContent = 'receiving';
 			}
 			if (synced && !out.synced && !out.done) {
-				$('status').textContent = `lost the signal after ${packets.length} packets. check the volume, then transfer again.`;
+				$('status').textContent = `lost the signal after ${packets.length} packets. check the volume, then press write + sound again.`;
 				decoder.reset(capture.sampleRate);
-				packets = [];
+				started = 0;
 			}
 			synced = out.synced;
 			packets.push(...out.packets);
@@ -106,8 +118,7 @@ async function listen() {
 			renderMeter(levels);
 			renderStages(packets, synced);
 			if (started) $('elapsed').textContent = `${((performance.now() - started) / 1000).toFixed(1)}s`;
-			const peak = Math.max(...samples.map(Math.abs));
-			$('level').textContent = peak > 0.98 ? 'too loud' : peak < 0.01 ? 'no signal' : 'level ok';
+			$('level').textContent = levelText(Math.max(...levels.slice(-20)));
 			if (out.done) finish(packets);
 		});
 	} catch (err) {
@@ -128,6 +139,7 @@ function stopListening() {
 	capture = null;
 	$('receiving').hidden = true;
 	$('listen').disabled = false;
+	$('listen').textContent = 'start listening';
 }
 
 async function finish(packets) {
