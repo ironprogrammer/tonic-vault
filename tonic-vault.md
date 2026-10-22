@@ -84,9 +84,9 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Sending to the Tonic works over a plain stereo cable from the Mac's headphone out, at 75% Mac volume. Playing a captured backup WAV restores it.
      - libpo32's rendered audio stops on the final tail's last bit, and the Tonic shows err at the end of the transfer. The Tonic's own transfers keep the carrier going for about 25 ms after the tail. Appending 4 bytes of `0x55` after the tail fixes it. The preamble length doesn't matter.
      - A single pattern packet, with no sounds or state packet, is accepted.
-   - Find out whether slots that aren't sent are left untouched. Packets are addressed by slot, so this is likely. If not, the erase packet may be needed to clear slots on purpose.
+   - Slots that aren't sent are left untouched. Sending only pattern 8 changed pattern 8 and nothing else, including the sounds.
    - `fill_rate` is the multiplier (see Device model). Confirmed with steps set to each value.
-   - Find out whether recorded effects appear in the 16 reserved bytes. In the first Tonic capture only slot 9's are nonzero (`02 02 02 02 00 00 00 72`, then zeros), Slot 9 has effect 12 (beat-repeat faster) recorded, so this is effect data. The encoding isn't worked out yet.
+   - Find out whether recorded effects appear in the 16 reserved bytes. In the first Tonic capture only slot 9's are nonzero (`02 02 02 02 00 00 00 72`, then zeros), Slot 9 has effect 12 (beat-repeat faster) recorded, so this is effect data. The encoding isn't worked out yet, but it doesn't block Phase 1: the vault stores the raw payload and resends these bytes unchanged.
    - Chains are transferred, in the state packet (see Device model). The first Tonic capture's chain was a single pattern (6).
 1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON.
 2. **Library and playback.** The screens from the mock, with playback through the WASM synth. Installable as a PWA so it works on a phone.
