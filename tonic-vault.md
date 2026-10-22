@@ -22,7 +22,7 @@ Plan: compile it to WASM and use it for decode, encode, and in-browser playback.
   - Lanes are channel columns: sounds 1/5/9/13, 2/6/10/14, 3/7/11/15, and 4/8/12/16. Only one sound per lane can fire on a step.
   - Each trigger byte has a 1–15 `fill_rate` in its low nibble, most likely the guide's step multiplier (hold step + m). Phase 0 confirms it.
   - There are 16 reserved bytes that libpo32 writes as zeros.
-- **State:** tempo (one byte), swing (stored as swing × 12), morph defaults, and a list of up to 16 pattern numbers. Chains can hold up to 64 patterns, so that list probably isn't the chain. **Tempo and swing are global on the device.** At import, the current value is saved onto each new pattern's metadata so browser playback is accurate. The user can edit it per pattern. There's no "intended tempo" concept.
+- **State:** tempo (one byte), swing (stored as swing × 12), morph defaults, and the chain as a list of zero-based pattern numbers, repeats included. libpo32's typed decode rejects lists longer than 16, so longer chains need a fix there or raw parsing. **Tempo and swing are global on the device.** At import, the current value is saved onto each new pattern's metadata so browser playback is accurate. The user can edit it per pattern. There's no "intended tempo" concept.
 
 ## Data model (initial)
 
@@ -75,12 +75,14 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 ## Phases
 
 0. **Prove the protocol on the device.** Short, throwaway experiments against a real Tonic, run before building anything, to answer what the docs can't. Not done until each question has a recorded answer.
-   - Record the Tonic's own transfer and decode it, over the air first, then over a cable. Run `phase0/capture.sh <name> [seconds]`, then press write + sound on the Tonic. It records a fixed window (30s by default) and decodes into `phase0/captures/<name>/`. A full transfer takes about 30s, so use 90 when starting it by hand.
-   - Confirm what one send contains: all 16 patterns? the sounds? state?
+   - Record the Tonic's own transfer and decode it, over the air first, then over a cable. Run `phase0/capture.sh <name> [seconds]`, then press write + sound on the Tonic. It records a fixed window (30s by default) and decodes into `phase0/captures/<name>/`. A full transfer takes about 35s, so use 90 when starting it by hand. `phase0/build/diag` shows where the demodulator syncs and loses lock.
+     - Over the air into a MacBook mic (10.22): the preamble demodulated cleanly but the data didn't, so no packets. The same mic decoded libpo32's own render from the Mac's speakers.
+     - TE's downloadable transfer WAVs decode with libpo32 (12 of 13), and their preamble is the same length as the Tonic's (about 256 bytes, versus libpo32's 124), so the format matches. The capture failed on signal quality.
+   - What one send contains (from TE's full backup WAV): 32 patch packets (16 sounds × left/right), all 16 patterns, and one state packet. TE's sound pack WAVs carry 16 patch packets, one pattern for slot 1, and a state packet that sets tempo. Still to confirm against a clean Tonic capture.
    - Re-render one pattern and send it back.
    - Find out whether slots that aren't sent are left untouched. Packets are addressed by slot, so this is likely. If not, the erase packet may be needed to clear slots on purpose.
    - Confirm `fill_rate` is the multiplier, and find out whether recorded effects appear anywhere, such as the reserved bytes.
-   - Find out whether chains are transferred at all.
+   - Chains are transferred, in the state packet (see Device model). Confirm against a Tonic capture.
 1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON.
 2. **Library and playback.** The screens from the mock, with playback through the WASM synth. Installable as a PWA so it works on a phone.
 3. **Export.** Compose the patterns to send, render the transfer audio, play it into the Tonic, and download it as a WAV.
