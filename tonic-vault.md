@@ -92,7 +92,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - `fill_rate` is the multiplier (see Device model). Confirmed with steps set to each value.
    - Find out whether recorded effects appear in the 16 reserved bytes. In the first Tonic capture only slot 9's are nonzero (`02 02 02 02 00 00 00 72`, then zeros), Slot 9 has effect 12 (beat-repeat faster) recorded, so this is effect data. It's one byte per step, and zero means no effect. The value doesn't map cleanly to the effect number; see `libpo32-followups.md` for the captured data. This doesn't block Phase 1. The vault stores the raw payload and resends these bytes unchanged, and pattern detail can already show which steps have an effect.
    - Chains are transferred, in the state packet (see Device model). The first Tonic capture's chain was a single pattern (6).
-1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON.
+1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON. Working: a full Tonic transfer imported in Chrome on 10.22 (`web/`, served at https://tonic-vault.test).
 2. **Library and playback.** The screens from the mock, with playback through the WASM synth. Installable as a PWA so it works on a phone.
 3. **Export.** Compose the patterns to send, render the transfer audio, play it into the Tonic, and download it as a WAV.
 4. **MIDI.** Map slots to drum notes (GM by default, editable), accents to velocity, and parameter locks to CC.
@@ -110,7 +110,7 @@ The Tonic has 3.5mm stereo line in and line out. It also has a built-in speaker 
 
 - **Import (Tonic line out → device input):** a plain stereo cable into a combo headphone/mic jack only registers as headphones, so the device gets no input. Use one of these:
   - A TRRS headset splitter, plugging the Tonic's cable into the splitter's mic side. Works with a MacBook's combo jack, and with an iPhone through Apple's USB-C (or Lightning) to 3.5mm adapter, which accepts headset mics.
-  - A 4-pole headphone cable (the kind with an inline mic, 4-pole plugs on both ends) from the Tonic's line out into a MacBook combo jack. macOS shows it as "External Microphone". This decoded a full transfer at Tonic volume 12 (bpm + 12). At volume 4 the signal was close to silent.
+  - A 4-pole headphone cable (the kind with an inline mic, 4-pole plugs on both ends) from the Tonic's line out into a MacBook combo jack. macOS shows it as "External Microphone". Transfers decoded at Tonic volume 12 to 16 (peaks around 15% and up). At 8% peak the decoder lost lock partway, and at volume 4 the signal was close to silent.
   - A USB audio interface with a line input, on a computer or on an iPhone over USB-C. This is the most reliable option.
 - **Export (device output → Tonic line in):** a plain 3.5mm stereo cable from the headphone output. On an iPhone, add the USB-C (or Lightning) to 3.5mm adapter.
 - **Volume:** the Tonic resets its volume whenever a cable is plugged in or it restarts, so check it before every transfer.
