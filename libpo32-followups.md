@@ -25,7 +25,26 @@ The state packet's chain holds up to 64 entries (the guide allows chaining 64 pa
 
 ## Reserved pattern bytes hold effects
 
-The 16 bytes libpo32 writes as zeros near the end of the pattern payload carry recorded effects. A pattern with effect 12 (beat-repeat faster) recorded had `02 02 02 02 00 00 00 72` followed by zeros there. It's one byte per step (zero means none). The top 2 bits are the step's beat, and the low 6 bits map to the effect in a way not worked out yet: effects 1, 2, 3, and 5 on steps 1, 5, 9, and 13 gave `04 4a 89 c6`. Until it's decoded, an encoder that zeroes these bytes drops a pattern's effects.
+The 16 bytes libpo32 writes as zeros near the end of the pattern payload carry recorded effects. A pattern with effect 12 (beat-repeat faster) recorded had `02 02 02 02 00 00 00 72` followed by zeros there. It's one byte per step, and zero means no effect. Until it's decoded, an encoder that zeroes these bytes drops a pattern's effects.
+
+Effects recorded live (hold FX + key in rec mode) on the downbeats of one pattern, captured from the Tonic:
+
+| Step | Effect | Byte |
+| --- | --- | --- |
+| 1 | 1 half rate | `04` |
+| 1 | 4 echo fade | `0e` |
+| 1 | 8 pitch bend up | `05` |
+| 1–4 | 12 beat-repeat faster (and `72` on step 8) | `02` |
+| 5 | 2 distortion | `4a` |
+| 5 | 6 eq sweep | `4d` |
+| 5 | 9 punch | `48` |
+| 9 | 3 squash | `89` |
+| 9 | 7 mega morph | `85` |
+| 9 | 10 6/8 quantize | `10` |
+| 13 | 5 pitch lfo | `c6` |
+| 13 | 11 beat-repeat | `c1` |
+
+The top 2 bits usually match the step's beat (0–3), but not always (`10` on step 9), and effects 7 and 8 share a low value of 5. So the byte carries more than the effect number, possibly timing or a parameter. Effect 8 on step 13 recorded as `00` in one pass. Live recording makes it hard to be sure exactly what landed where.
 
 ## Step morph values in the pattern editor
 
