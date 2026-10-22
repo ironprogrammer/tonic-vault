@@ -25,7 +25,7 @@ The state packet's chain holds up to 64 entries (the guide allows chaining 64 pa
 
 ## Reserved pattern bytes hold effects
 
-The 16 bytes libpo32 writes as zeros near the end of the pattern payload carry recorded effects. A pattern with effect 12 (beat-repeat faster) recorded had `02 02 02 02 00 00 00 72` followed by zeros there. The encoding isn't worked out yet. Until it is, an encoder that zeroes these bytes drops a pattern's effects.
+The 16 bytes libpo32 writes as zeros near the end of the pattern payload carry recorded effects. A pattern with effect 12 (beat-repeat faster) recorded had `02 02 02 02 00 00 00 72` followed by zeros there. It's one byte per step (zero means none). The top 2 bits are the step's beat, and the low 6 bits map to the effect in a way not worked out yet: effects 1, 2, 3, and 5 on steps 1, 5, 9, and 13 gave `04 4a 89 c6`. Until it's decoded, an encoder that zeroes these bytes drops a pattern's effects.
 
 ## Step morph values in the pattern editor
 
