@@ -82,10 +82,17 @@ test('renders an audible hit of every sound', async () => {
 	}
 });
 
+test('names a factory set\'s sounds from the guide', async () => {
+	const { packets } = await decodeFixture();
+	const { soundSet } = await importTransfer(emptyVault(), packets);
+	assert.equal(soundSet.soundNames[2], 'shaker / zap');
+});
+
 test('a file import names its sound set and leaves the tonic alone', async () => {
 	const { packets } = await decodeFixture();
 	const vault = emptyVault();
 	const result = await importTransfer(vault, packets, undefined, { fromTonic: false, setName: 'basic beats 1' });
 	assert.equal(vault.tonic, null);
 	assert.equal(result.soundSet.name, 'basic beats 1');
+	assert.equal(result.soundSet.soundNames[2], 'shaker / zap');
 });

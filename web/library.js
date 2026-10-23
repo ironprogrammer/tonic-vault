@@ -1,6 +1,6 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
-import { FACTORY_SOUNDS, fromBase64, parsePattern, playableSoundSet } from './pattern.js';
-import { emptyVault, isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
+import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
+import { emptyVault, isNew, loadVault, patternName, saveVault, shortDate, upgradeVault } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 let vault = loadVault();
@@ -35,7 +35,13 @@ function setFilter(key) {
 	try {
 		localStorage.setItem(FILTER_KEY, key);
 	} catch {}
+	// Browser back can restore this page from memory, so re-read the vault in case another page changed it.
+addEventListener('pageshow', (e) => {
+	if (!e.persisted) return;
+	vault = loadVault();
 	render();
+});
+render();
 }
 
 function setName(set) {
@@ -50,11 +56,14 @@ function renderKit() {
 	hearSetId = set?.id ?? null;
 	if (!set) return;
 	const playable = playableSoundSet(set);
-	$('kit').replaceChildren(...FACTORY_SOUNDS.map((name, i) => {
+	$('kit').replaceChildren(...Array.from({ length: 16 }, (_, i) => {
+		const name = set.soundNames[i];
 		const button = el('button', {
 			type: 'button',
+			class: name ? 'named' : '',
+			'aria-label': `hear sound ${i + 1}${name ? `, ${name}` : ''}`,
 			onclick: () => player.audition(playable, i + 1),
-		}, el('span', { class: 'dim tiny' }, String(i + 1)), el('span', { class: 'ellipsis' }, name));
+		}, ...(name ? [el('span', { class: 'dim tiny' }, String(i + 1)), el('span', { class: 'ellipsis' }, name)] : [String(i + 1)]));
 		button.disabled = !playable.patches[i + 1]?.right;
 		return button;
 	}));
@@ -112,7 +121,13 @@ function renderPatterns() {
 		box.checked = selected.has(p.id);
 		box.addEventListener('change', () => {
 			box.checked ? selected.add(p.id) : selected.delete(p.id);
-			render();
+			// Browser back can restore this page from memory, so re-read the vault in case another page changed it.
+addEventListener('pageshow', (e) => {
+	if (!e.persisted) return;
+	vault = loadVault();
+	render();
+});
+render();
 		});
 		return el('div', { class: `pattern-row${selected.has(p.id) ? ' selected' : ''}` },
 			el('label', { class: 'check' }, box),
@@ -174,7 +189,13 @@ function render() {
 
 function save() {
 	saveVault(vault);
+	// Browser back can restore this page from memory, so re-read the vault in case another page changed it.
+addEventListener('pageshow', (e) => {
+	if (!e.persisted) return;
+	vault = loadVault();
 	render();
+});
+render();
 }
 
 function downloadVault() {
@@ -189,6 +210,7 @@ async function loadFile(file) {
 	try {
 		const loaded = { ...emptyVault(), ...JSON.parse(await file.text()) };
 		if (!Array.isArray(loaded.patterns) || !Array.isArray(loaded.soundSets)) throw new Error('not a vault file');
+		upgradeVault(loaded);
 		if (!confirm(`replace this vault (${vault.patterns.length} patterns) with ${file.name} (${loaded.patterns.length} patterns)?`)) return;
 		vault = loaded;
 		selected.clear();
@@ -209,5 +231,11 @@ $('delete-selected').addEventListener('click', () => {
 	vault.patterns = vault.patterns.filter((p) => !selected.has(p.id));
 	selected.clear();
 	save();
+});
+// Browser back can restore this page from memory, so re-read the vault in case another page changed it.
+addEventListener('pageshow', (e) => {
+	if (!e.persisted) return;
+	vault = loadVault();
+	render();
 });
 render();

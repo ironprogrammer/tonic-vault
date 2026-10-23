@@ -1,5 +1,5 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
-import { FACTORY_SOUNDS, fromBase64, parsePattern, playableSoundSet } from './pattern.js';
+import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
 import { isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,7 +18,7 @@ function cell(className, content = '') {
 }
 
 // Rows for each sound the pattern uses, then accents and effects. Every cell carries data-step for the playhead.
-function renderGrid(parsed) {
+function renderGrid(parsed, set) {
 	const grid = $('grid');
 	const row = (label, cells) => grid.append(label, ...cells.map((c, step) => {
 		c.dataset.step = step;
@@ -29,7 +29,11 @@ function renderGrid(parsed) {
 	row(cell(''), Array.from({ length: 16 }, (_, step) => cell('num', String(step + 1))));
 	const sounds = [...new Set(parsed.hits.map((h) => h.sound))].sort((a, b) => a - b);
 	for (const sound of sounds) {
-		const label = cell('row-label', `<span class="dim tiny">${sound} · ch ${((sound - 1) % 4) + 1}</span><span class="ellipsis">${FACTORY_SOUNDS[sound - 1]}</span>`);
+		const name = set?.soundNames[sound - 1];
+		const ch = `ch ${((sound - 1) % 4) + 1}`;
+		const label = cell('row-label', name
+			? `<span class="dim tiny">${sound} · ${ch}</span><span class="ellipsis">${name}</span>`
+			: `<span class="dim tiny">${ch}</span><span>sound ${sound}</span>`);
 		row(label, Array.from({ length: 16 }, (_, step) => {
 			const h = parsed.hits.find((h) => h.sound === sound && h.step === step);
 			if (!h) return cell('step');
@@ -78,6 +82,11 @@ function setPlayIcon(playing) {
 	$('play').setAttribute('aria-label', playing ? 'stop' : 'play pattern');
 }
 
+// Browser back can restore this page from memory with old values, so start over from the saved vault.
+addEventListener('pageshow', (e) => {
+	if (e.persisted) location.reload();
+});
+
 if (!pattern) {
 	$('detail').hidden = true;
 	$('missing').hidden = false;
@@ -106,7 +115,7 @@ if (!pattern) {
 		save();
 	});
 
-	renderGrid(parsed);
+	renderGrid(parsed, set);
 	renderTags();
 	setPlayIcon(false);
 	$('play').disabled = !playable;

@@ -4,6 +4,28 @@ import { TAG } from './po32.js';
 
 const STORAGE_KEY = 'tonic-vault';
 
+// A sound set's id is a hash of its patches, so every PO-32 still on factory sounds has this one.
+export const FACTORY_SET_ID = 'cdf8e256e5949113';
+
+export const FACTORY_SOUNDS = [
+	'kick 1', 'snare 1', 'shaker / zap', 'lfo effect',
+	'kick 2', 'snare 3', 'close / open hi-hat', 'claves / cowbell',
+	'low tom / kick 3', 'rimshot', 'tambourine / crash', 'hand clap',
+	'bass', 'fm snare', 'cymbal', 'high tom',
+];
+
+// Each sound set keeps its own 16 sound names. Factory sets start with the guide's names; packs publish none.
+function seedSoundNames(set) {
+	set.soundNames ??= set.id === FACTORY_SET_ID ? [...FACTORY_SOUNDS] : Array(16).fill('');
+	return set;
+}
+
+// Fills in anything a vault saved by an older version lacks.
+export function upgradeVault(vault) {
+	vault.soundSets.forEach(seedSoundNames);
+	return vault;
+}
+
 export function emptyVault() {
 	return { version: 1, soundSets: [], patterns: [], tonic: null };
 }
@@ -11,7 +33,7 @@ export function emptyVault() {
 export function loadVault(storage = globalThis.localStorage) {
 	try {
 		const json = storage?.getItem(STORAGE_KEY);
-		return json ? JSON.parse(json) : emptyVault();
+		return json ? upgradeVault(JSON.parse(json)) : emptyVault();
 	} catch {
 		return emptyVault();
 	}
@@ -65,7 +87,7 @@ export async function importTransfer(vault, packets, now = new Date().toISOStrin
 		if (set) {
 			set.lastSeen = now;
 		} else {
-			set = { id, name: setName, sounds: patches.map((p) => toBase64(p.payload)), firstSeen: now, lastSeen: now };
+			set = seedSoundNames({ id, name: setName, sounds: patches.map((p) => toBase64(p.payload)), firstSeen: now, lastSeen: now });
 			vault.soundSets.push(set);
 			result.newSoundSet = true;
 		}

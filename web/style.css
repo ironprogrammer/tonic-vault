@@ -102,7 +102,7 @@ a { color: var(--cream); }
 .small-keys { display: flex; align-items: center; gap: 4px; font-size: 20px; }
 
 .kit { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-.kit button { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; height: auto; min-height: 48px; padding: 6px 7px; border: none; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: transparent; color: var(--cream); text-align: left; font-weight: 300; font-size: 13px; }
+.kit button { display: flex; align-items: center; height: auto; min-height: 48px; padding: 6px 9px; border: none; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: transparent; color: var(--cream); text-align: left; font-weight: 300; font-size: 17px; }
 .kit button:active { background: var(--cream); color: var(--ground); }
 
 .chips { display: flex; gap: 6px; }
@@ -175,3 +175,4 @@ a { color: var(--cream); }
 .connection .label { font-size: 17px; font-weight: 400; }
 .connection[aria-pressed="true"] { border-color: var(--cream); background: var(--cream); color: var(--ground); }
 .kit button:disabled { opacity: 0.35; }
+.kit button.named { flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 7px; font-size: 13px; }

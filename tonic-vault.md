@@ -32,7 +32,7 @@ The vault is a single JSON document. It lives in localStorage and can be downloa
 ```json
 {
 	"version": 1,
-	"soundSets": [ { "id": "<hash>", "name": "factory", "sounds": [ /* 16 decoded patches + raw bytes */ ], "firstSeen": "", "lastSeen": "" } ],
+	"soundSets": [ { "id": "<hash>", "name": "factory", "sounds": [ /* 16 decoded patches + raw bytes */ ], "soundNames": [ "kick 1", /* 16 in all, "" when unknown */ ], "firstSeen": "", "lastSeen": "" } ],
 	"patterns": [ { "id": "<hash>", "name": "", "tags": [], "bpm": 120, "swing": 20, "soundSetId": "<hash>", "slot": 9, "firstSeen": "", "lastSeen": "", "raw": "<base64 payload>" } ]
 }
 ```
@@ -66,16 +66,15 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
   - Show progress with a stop button.
   - Offer a "download backup .wav" for later restore from any recording device. It's generated on demand and not stored.
 - **Library:**
-  - The sounds last seen on the Tonic shown in a 4×4 grid, with sounds you can audition.
-  - Pattern list with a 16-step mini strip, bpm/swing, new badge, and play button.
+  - Pattern list with a 16-step mini strip, bpm/swing, new badge, and play button. Filter by new or by tag.
   - Multi-select to delete or add to export. Adding several puts each in its original slot, and asks for a slot only when that one is already taken in the export.
-  - Saved sounds list with delete.
-  - Save/load `.json`.
+  - Saved sound sets below the patterns, with rename, delete, and a 4×4 grid to audition any one set (the set last seen on the Tonic at first).
+  - Save/load `.json` at the top. Links to TE's PO-32 guide and sound packs.
 - **Pattern detail:** a sound-rows × 16-step grid showing hits, parameter locks, multipliers (the number on the hit), an accent row, an effects row, and the playhead. Name, tags, editable bpm/swing, delete.
   - Effects show only which steps have one, until the effect bytes are decoded. Playback doesn't reproduce effects, and the screen says so.
   - "Add to export" opens a slot picker with the pattern's last slot preselected and slots already taken in the export marked.
 - **Style:** follow TE's PO-32 guide aesthetic: ochre ground, light hairlines, and thin lowercase type. Text and icons are cream instead of the guide's grey for contrast. Use the guide's own held key, pressed key, mic, and jack artwork, since it matches the device's buttons.
-- **Terms:** use the PO-32 guide's words for everything on the device: sounds, pattern, slot, accent, tempo, swing, multiplier, parameter lock, chain, transfer data, receive data, receive mode, backup, and restore. Button combos are written as the guide writes them ("press write + sound"). Factory sound names are the guide's, such as "shaker / zap" and "close / open hi-hat".
+- **Terms:** use the PO-32 guide's words for everything on the device: sounds, pattern, slot, accent, tempo, swing, multiplier, parameter lock, chain, transfer data, receive data, receive mode, backup, and restore. Button combos are written as the guide writes them ("press write + sound"). Each sound set stores its own 16 sound names. A factory set (recognized by its sound set id, which matches the test fixture's) starts with the guide's names, such as "shaker / zap" and "close / open hi-hat". Sound packs publish no names, so their sounds go by number (1–16) until named. Editing the names could come later.
 
 ## Phases
 

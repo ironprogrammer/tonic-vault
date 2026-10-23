@@ -1,11 +1,4 @@
-// Reads a raw pattern payload into hits, accents, and effects, and names the Tonic's sounds.
-
-export const FACTORY_SOUNDS = [
-	'kick 1', 'snare 1', 'shaker / zap', 'lfo effect',
-	'kick 2', 'snare 3', 'close / open hi-hat', 'claves / cowbell',
-	'low tom / kick 3', 'rimshot', 'tambourine / crash', 'hand clap',
-	'bass', 'fm snare', 'cymbal', 'high tom',
-];
+// Reads a raw pattern payload into hits, accents, and effects.
 
 /*
  * Payload layout: slot - 1, then 4 lanes of 16 trigger bytes + 16 knob pairs, 16 effect bytes, and a 16-bit accent mask.
