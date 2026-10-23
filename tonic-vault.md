@@ -6,7 +6,7 @@ Mobile-first UI mock (5 screens): https://claude.ai/artifact/CJmNnTwcJKDoKu27wvA
 
 ## Foundation
 
-[ericlewis/libpo32](https://github.com/ericlewis/libpo32) (MIT, freestanding C99) already implements the transfer protocol. It's a submodule at `vendor/libpo32`, pinned to v0.3.0.
+[ericlewis/libpo32](https://github.com/ericlewis/libpo32) (MIT, freestanding C99) already implements the transfer protocol. It's a submodule at `vendor/libpo32`, pinned to `ad6bc7a`: v0.3.0 plus open PR [#20](https://github.com/ericlewis/libpo32/pull/20), whose synth fixes turn the factory kicks from a pitch sweep back into kicks. Move back to a release once it merges.
 
 - Packet build and parse for patch, pattern, state, knob, and reset packets. An erase tag (`0xB892`, 1-byte payload) is known but has no typed helper yet.
 - A DPSK modem renderer and decoder.
@@ -105,6 +105,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 
 - `make -C phase0` builds libpo32's decoder, demo, and pattern editor natively with clang. cmake isn't needed.
 - `phase0/build/frame <tag-hex>:<payload.bin> ...` builds a transfer from raw packet payloads (such as the `payload.bin` files `po32_decode_capture` writes) and prints 48 kHz f32 audio. Pipe it through `sox -t f32 -r 48000 -c 1 - -b 16 out.wav gain -3`, then `play out.wav` with the Tonic in receive mode.
+- The pinned libpo32 commit is only on the PR, so a fresh clone needs `git -C vendor/libpo32 fetch origin pull/20/head` before `git submodule update`.
 - `make -C web` builds `po32.wasm` (decoder and synth), and `make -C web test` runs the node tests against the fixture below. The app is static files in `web/`: `index.html` (library), `import.html`, and `pattern.html`.
 - `tests/fixtures/tonic-backup-2026-10-22.wav` is a real Tonic backup (cable, 48 kHz mono, 49 packets) so decode work doesn't need a fresh transfer each time. New captures land in the gitignored `phase0/captures/`.
 

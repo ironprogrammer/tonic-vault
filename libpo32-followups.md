@@ -2,7 +2,7 @@
 
 Issues found while testing libpo32 v0.3.0 (`3b3a0a7`) against a real PO-32 Tonic. Each one could become an upstream issue or PR at https://github.com/ericlewis/libpo32.
 
-As of 10.22, none of these are filed upstream, and the repo has no issues at all. `3b3a0a7` is the latest main (0.3.0 plus a README change). Open PR [#20](https://github.com/ericlewis/libpo32/pull/20) corrects the synth's attack, pitch modulation, and EQ gain maps against Microtonic, which matters for browser playback accuracy. Worth picking up if it merges.
+As of 10.22, none of these are filed upstream, and the repo has no issues at all. `3b3a0a7` is the latest main (0.3.0 plus a README change). Open PR [#20](https://github.com/ericlewis/libpo32/pull/20) corrects the synth's attack, pitch modulation, and EQ gain maps against Microtonic, which matters for browser playback accuracy. As of 10.23 the vault pins the PR's head (`ad6bc7a`): on v0.3.0 the factory kick sweeps from about 1200 Hz down to 600 Hz over 150 ms, and with the PR it stays around 50–150 Hz.
 
 ## Rendered transfers end too early for the Tonic
 
