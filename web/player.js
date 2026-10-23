@@ -85,7 +85,7 @@ export function createPlayer(synth) {
 		/*
 		 * Loops a parsed pattern until stop(). timing is { bpm, swing } and is read every step, so edits apply live.
 		 * onStep gets the step index as it sounds, then null on stop.
-		 * Swing (0-18, shown on the Tonic as 500-518) delays every second step; the exact curve is a guess.
+		 * Swing (0-18, shown on the Tonic as S00-S18) delays every second step; the exact curve is a guess.
 		 */
 		play(pattern, soundSet, timing, onStep = () => {}) {
 			stop();

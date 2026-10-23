@@ -163,3 +163,14 @@ a { color: var(--cream); }
 .field { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .field input { width: 100%; height: 44px; padding: 0; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--cream); font-weight: 300; font-size: 28px; }
 .nowrap { white-space: nowrap; }
+
+.header-actions { display: flex; gap: 8px; }
+.set-row.selected { background: rgba(239, 235, 225, 0.1); }
+.set-row .meta { flex-wrap: wrap; }
+.links { display: flex; gap: 16px; padding-top: 8px; border-top: 1px solid var(--faint); }
+.links a { color: var(--dim); }
+
+.connections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.connection { display: flex; flex-direction: column; align-items: center; gap: 10px; height: auto; padding: 16px 8px 12px; border: 1px solid var(--line); background: transparent; color: var(--cream); font-weight: 300; }
+.connection .label { font-size: 17px; font-weight: 400; }
+.connection[aria-pressed="true"] { border-color: var(--cream); background: var(--cream); color: var(--ground); }

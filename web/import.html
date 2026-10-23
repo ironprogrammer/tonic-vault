@@ -22,11 +22,24 @@
 
 <section id="setup">
 	<h2>1 — connect</h2>
+	<div class="connections">
+		<button type="button" class="connection" data-connection="cable" aria-pressed="true">
+			<svg data-icon="jack" width="10" height="60" viewBox="396 112 60 366" fill="currentColor" aria-hidden="true"><g><path d="M413.276 151.677h26.02v.046l.416-.046v-4.068l-2.846-2.846 1.627-20.744-9.76-9.76h-4.884l-9.76 9.76 1.627 20.744-2.847 2.845v4.067zM440.525 229.76v-74.017H412.056v20.332h28.455v4.069h-28.453v49.615h-4.072v4.07h36.602v-4.07z"></path></g><path d="M426.21 233.83H398.47l-.268 73.903 3.325 35.903h13.494v8.4H402.03l2.312 24.134h10.682v8.134h-9.936l1.01 12.202 19.977-.114h.09l19.978.114 1.01-12.202h-9.937v-8.134h10.682l2.31-24.134h-12.992v-8.4h13.495l3.326-35.903-.268-73.903zM415.184 396.394h21.87v79.346h-21.87z"></path></svg>
+			<span class="label">cable</span>
+			<span class="small">tonic line out → mic in</span>
+		</button>
+		<button type="button" class="connection" data-connection="air" aria-pressed="false">
+			<svg data-icon="mic" width="31" height="60" viewBox="124 112 187 366" fill="currentColor" aria-hidden="true"><path d="M286.54 220.282H148.73v-36.696c0-38.07 30.85-68.92 68.906-68.92 38.055 0 68.906 30.85 68.906 68.92v36.696zM170.666 190.25c-5.73 0-10.36 4.648-10.36 10.362s4.63 10.36 10.36 10.36c5.73 0 10.347-4.646 10.347-10.36s-4.618-10.362-10.347-10.362m31.362 0c-5.714 0-10.36 4.648-10.36 10.362s4.646 10.36 10.36 10.36c5.73 0 10.362-4.646 10.362-10.36s-4.634-10.362-10.363-10.362m31.362 0c-5.715 0-10.347 4.648-10.347 10.362s4.632 10.36 10.346 10.36c5.728 0 10.36-4.646 10.36-10.36s-4.632-10.362-10.36-10.362m31.376 0c-5.73 0-10.36 4.648-10.36 10.362s4.63 10.36 10.36 10.36c5.714 0 10.347-4.646 10.347-10.36s-4.633-10.362-10.347-10.362m-94.1-31.48c-5.73 0-10.362 4.648-10.362 10.363 0 5.714 4.632 10.36 10.36 10.36 5.73 0 10.348-4.646 10.348-10.36 0-5.715-4.618-10.362-10.347-10.362m31.362 0c-5.714 0-10.36 4.648-10.36 10.363 0 5.714 4.646 10.36 10.36 10.36 5.73 0 10.362-4.646 10.362-10.36 0-5.715-4.634-10.362-10.363-10.362m31.362 0c-5.715 0-10.347 4.648-10.347 10.363 0 5.714 4.632 10.36 10.346 10.36 5.728 0 10.36-4.646 10.36-10.36 0-5.715-4.632-10.362-10.36-10.362m31.376 0c-5.73 0-10.36 4.648-10.36 10.363 0 5.714 4.63 10.36 10.36 10.36 5.714 0 10.347-4.646 10.347-10.36 0-5.715-4.633-10.362-10.347-10.362m-62.812-30.513c-5.73 0-10.36 4.633-10.36 10.347 0 5.73 4.63 10.362 10.36 10.362 5.714 0 10.362-4.633 10.362-10.362 0-5.714-4.647-10.347-10.362-10.347m31.363 0c-5.73 0-10.362 4.633-10.362 10.347 0 5.73 4.632 10.362 10.362 10.362 5.714 0 10.346-4.633 10.346-10.362 0-5.714-4.632-10.347-10.346-10.347"></path><path d="M286.6 321.886v37.646c0 38.026-30.938 68.964-68.965 68.964-38.026 0-68.964-30.938-68.964-68.964v-37.646h-20.707v37.646c0 46.078 34.942 84.12 79.735 89.088v26.714h20.708v-26.846c44.383-5.334 78.902-43.156 78.902-88.956v-37.646H286.6zM216.097 304.92c-5.73 0-10.347 4.633-10.347 10.347 0 5.73 4.618 10.362 10.347 10.362 5.73 0 10.346-4.634 10.346-10.363 0-5.714-4.618-10.347-10.346-10.347"></path></svg>
+			<span class="label">over the air</span>
+			<span class="small">tonic speaker → mic</span>
+		</button>
+	</div>
 	<label class="row">
 		<span class="dim">input</span>
 		<select id="input"><option value="">default input</option></select>
 	</label>
-	<p class="dim small">a cable from the tonic's line out needs a 4-pole (trrs) cable or adapter into a headset jack. check the tonic's volume first (hold bpm, press 1–16); it resets whenever a cable is plugged in.</p>
+	<p class="dim small" data-for="cable">a cable from the tonic's line out needs a 4-pole (trrs) cable or adapter into a headset jack. check the tonic's volume first (hold bpm, press 1–16); it resets whenever a cable is plugged in.</p>
+	<p class="dim small" data-for="air" hidden>hold the tonic close to the mic in a quiet room, and turn its volume up (hold bpm, press 1–16).</p>
 
 	<h2>2 — listen</h2>
 	<button id="listen" class="primary">start listening</button>

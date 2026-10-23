@@ -94,15 +94,15 @@ if (!pattern) {
 
 	// The player reads pattern.bpm and pattern.swing every step, so edits apply while it plays.
 	$('bpm').value = pattern.bpm;
-	$('swing').value = 500 + pattern.swing;
+	$('swing').value = pattern.swing;
 	$('bpm').addEventListener('change', () => {
 		pattern.bpm = Math.min(240, Math.max(60, Number($('bpm').value) || pattern.bpm));
 		$('bpm').value = pattern.bpm;
 		save();
 	});
 	$('swing').addEventListener('change', () => {
-		pattern.swing = Math.min(18, Math.max(0, (Number($('swing').value) || 500) - 500));
-		$('swing').value = 500 + pattern.swing;
+		pattern.swing = Math.min(18, Math.max(0, Math.round(Number($('swing').value)) || 0));
+		$('swing').value = pattern.swing;
 		save();
 	});
 

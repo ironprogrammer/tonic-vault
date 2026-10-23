@@ -152,7 +152,7 @@ async function finish(packets) {
 	$('sounds-mark').textContent = result.soundSet ? (result.newSoundSet ? '+' : '=') : '–';
 	$('sounds-label').textContent = result.soundSet ? (result.newSoundSet ? 'new sounds' : `sounds ${result.soundSet.name || 'known'}`) : 'no sounds';
 	const notes = [];
-	if (result.state) notes.push(`tonic was at ${result.state.tempo} bpm · swing ${500 + result.state.swing}; saved with each new pattern.`);
+	if (result.state) notes.push(`tonic was at ${result.state.tempo} bpm · swing ${result.state.swing}; saved with each new pattern.`);
 	if (result.movedPatterns.length) notes.push(`${result.movedPatterns.length} known pattern${result.movedPatterns.length === 1 ? '' : 's'} changed slots.`);
 	$('results-note').textContent = notes.join(' ');
 
@@ -169,6 +169,22 @@ async function finish(packets) {
 		location.href = './';
 	};
 	$('results').hidden = false;
+}
+
+// Cable or over the air only changes the setup hints. The choice is remembered per browser.
+function showConnection(kind) {
+	for (const b of document.querySelectorAll('[data-connection]')) b.setAttribute('aria-pressed', String(b.dataset.connection === kind));
+	for (const p of document.querySelectorAll('[data-for]')) p.hidden = p.dataset.for !== kind;
+	try {
+		localStorage.setItem('tonic-vault-connection', kind);
+	} catch {}
+}
+
+for (const b of document.querySelectorAll('[data-connection]')) b.addEventListener('click', () => showConnection(b.dataset.connection));
+try {
+	showConnection(localStorage.getItem('tonic-vault-connection') || 'cable');
+} catch {
+	showConnection('cable');
 }
 
 $('listen').addEventListener('click', listen);
