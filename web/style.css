@@ -167,8 +167,9 @@ a { color: var(--cream); }
 .header-actions { display: flex; gap: 8px; }
 .set-row.selected { background: rgba(239, 235, 225, 0.1); }
 .set-row .meta { flex-wrap: wrap; }
-.links { display: flex; gap: 16px; padding-top: 8px; border-top: 1px solid var(--faint); }
+.links { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-top: 8px; border-top: 1px solid var(--faint); }
 .links a { color: var(--dim); }
+.links p { flex-basis: 100%; margin: 0; }
 
 .connections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .connection { display: flex; flex-direction: column; align-items: center; gap: 10px; height: auto; padding: 16px 8px 12px; border: 1px solid var(--line); background: transparent; color: var(--cream); font-weight: 300; }

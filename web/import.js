@@ -5,6 +5,13 @@ const $ = (id) => document.getElementById(id);
 const decoder = await loadDecoder(await (await fetch('po32.wasm')).arrayBuffer());
 const vault = loadVault();
 let capture = null;
+let waiting = '';
+let connection = 'cable';
+const GIVE_UP_SECONDS = 30;
+const GIVE_UP = {
+	cable: 'nothing came through. check the cable is in the tonic\'s line out, the input above, and the tonic\'s volume, then listen again.',
+	air: 'nothing came through. hold the tonic closer to the mic, turn its volume up, keep the room quiet, then listen again.',
+};
 
 function showVaultCount() {
 	const n = vault.patterns.length;
@@ -20,7 +27,16 @@ async function listInputs() {
 	for (const d of devices.filter((d) => d.kind === 'audioinput' && d.deviceId !== 'default')) {
 		select.add(new Option(d.label || 'input', d.deviceId));
 	}
-	select.value = current;
+	select.value = current || savedInput();
+	if (select.selectedIndex < 0) select.value = '';
+}
+
+function savedInput() {
+	try {
+		return localStorage.getItem('tonic-vault-input') || '';
+	} catch {
+		return '';
+	}
 }
 
 // Opens the chosen input with browser processing off, since echo cancellation and gain control mangle the modem signal.
@@ -41,6 +57,7 @@ async function startCapture(onSamples) {
 	node.port.onmessage = (e) => onSamples(e.data);
 	ctx.createMediaStreamSource(stream).connect(node);
 	return {
+		label: stream.getAudioTracks()[0]?.label || 'the input',
 		sampleRate: ctx.sampleRate,
 		stop() {
 			stream.getTracks().forEach((t) => t.stop());
@@ -89,11 +106,15 @@ function levelText(peak) {
 async function listen() {
 	$('listen').disabled = true;
 	$('listen').textContent = 'listening…';
+	$('listen-note').textContent = '';
 	$('results').hidden = true;
 	let packets = [];
 	let synced = false;
 	let levels = Array(48).fill(0);
 	let started = 0;
+	let batches = 0;
+	let lastSynced = 0;
+	let loudest = 0;
 
 	try {
 		capture = await startCapture((samples) => {
@@ -108,7 +129,7 @@ async function listen() {
 				$('status').textContent = 'receiving';
 			}
 			if (synced && !out.synced && !out.done) {
-				$('status').textContent = `lost the signal after ${packets.length} packets. check the volume, then press write + sound again.`;
+				$('status').textContent = `lost the signal after ${packets.length} packet${packets.length === 1 ? '' : 's'}, peaking at ${Math.round(loudest * 100)}%. check the volume, then press write + sound again.`;
 				decoder.reset(capture.sampleRate);
 				started = 0;
 			}
@@ -119,7 +140,18 @@ async function listen() {
 			renderStages(packets, synced);
 			if (started) $('elapsed').textContent = `${((performance.now() - started) / 1000).toFixed(1)}s`;
 			$('level').textContent = levelText(Math.max(...levels.slice(-20)));
+			batches++;
+			if (synced) {
+				lastSynced = batches;
+				loudest = Math.max(loudest, peak);
+			}
+			if (!synced && !packets.length) $('status').textContent = batches > levels.length && levels.every((v) => v < 0.01) ? `no signal from ${capture?.label}. cancel, pick the input the cable is in, and listen again.` : waiting;
 			if (out.done) finish(packets);
+			else if (!synced && (batches - lastSynced) * samples.length / capture.sampleRate > GIVE_UP_SECONDS) {
+				const lost = $('status').textContent;
+				stopListening();
+				$('listen-note').textContent = packets.length ? lost : GIVE_UP[connection];
+			}
 		});
 	} catch (err) {
 		$('listen').disabled = false;
@@ -128,7 +160,8 @@ async function listen() {
 	}
 	await listInputs();
 	decoder.reset(capture.sampleRate);
-	$('status').textContent = 'waiting for the tonic…';
+	waiting = `waiting for the tonic on ${capture.label}…`;
+	$('status').textContent = waiting;
 	$('elapsed').textContent = '0.0s';
 	renderStages([], false);
 	$('receiving').hidden = false;
@@ -197,6 +230,7 @@ $('file').addEventListener('change', (e) => {
 
 // Cable or over the air only changes the setup hints. The choice is remembered per browser.
 function showConnection(kind) {
+	connection = kind;
 	for (const b of document.querySelectorAll('[data-connection]')) b.setAttribute('aria-pressed', String(b.dataset.connection === kind));
 	for (const p of document.querySelectorAll('[data-for]')) p.hidden = p.dataset.for !== kind;
 	try {
@@ -211,6 +245,11 @@ try {
 	showConnection('cable');
 }
 
+$('input').addEventListener('change', (e) => {
+	try {
+		localStorage.setItem('tonic-vault-input', e.target.value);
+	} catch {}
+});
 $('listen').addEventListener('click', listen);
 $('cancel').addEventListener('click', stopListening);
 $('again').addEventListener('click', () => { $('results').hidden = true; listen(); });
