@@ -9,8 +9,8 @@ let waiting = '';
 let connection = 'cable';
 const GIVE_UP_SECONDS = 30;
 const GIVE_UP = {
-	cable: 'nothing came through. check the cable is in the tonic\'s line out, the input above, and the tonic\'s volume, then listen again.',
-	air: 'nothing came through. hold the tonic closer to the mic, turn its volume up, keep the room quiet, then listen again.',
+	cable: 'nothing came through. check the cable is in the tonic\'s line out, the input above, and that the tonic\'s volume is 16, then listen again.',
+	air: 'nothing came through. hold the tonic closer to the mic, set its volume to 16, keep the room quiet, then listen again.',
 };
 
 function showVaultCount() {
@@ -129,7 +129,7 @@ async function listen() {
 				$('status').textContent = 'receiving';
 			}
 			if (synced && !out.synced && !out.done) {
-				$('status').textContent = `lost the signal after ${packets.length} packet${packets.length === 1 ? '' : 's'}, peaking at ${Math.round(loudest * 100)}%. check the volume, then press write + sound again.`;
+				$('status').textContent = `lost the signal after ${packets.length} packet${packets.length === 1 ? '' : 's'}, peaking at ${Math.round(loudest * 100)}%. check the tonic's volume is 16, then press write + sound again.`;
 				decoder.reset(capture.sampleRate);
 				started = 0;
 			}
@@ -165,6 +165,7 @@ async function listen() {
 	$('elapsed').textContent = '0.0s';
 	renderStages([], false);
 	$('receiving').hidden = false;
+	$('receiving').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function stopListening() {
@@ -204,6 +205,7 @@ async function finish(packets, { done = true, ...options } = {}) {
 		location.href = './';
 	};
 	$('results').hidden = false;
+	$('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Decodes a transfer saved as audio, such as a TE sound pack's data .wav. A pack's file name names its sound set.

@@ -54,7 +54,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 - **Import** (Tonic: write + sound):
   - Choose cable (Tonic line out → mic in) or over the air.
   - Choose the input device.
-  - Remind the user to check the Tonic's volume (bpm + 1–16) first. It resets whenever a cable is plugged in or the Tonic restarts.
+  - Ask for the Tonic's volume at 16 (hold bpm, press 16), the most reliable level. It resets whenever a cable is plugged in or the Tonic restarts.
   - Tap listen in the app first, then start the transfer on the Tonic.
   - Show live level, stage progress, and errors.
   - On the results screen, show new / known / sounds match and prompt to name only new patterns.
