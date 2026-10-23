@@ -1,5 +1,5 @@
 import { loadDecoder, TAG } from './po32.js';
-import { importTransfer, loadVault, saveVault } from './vault.js';
+import { importTransfer, loadVault, patternName, saveVault } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 const decoder = await loadDecoder(await (await fetch('po32.wasm')).arrayBuffer());
@@ -142,24 +142,26 @@ function stopListening() {
 	$('listen').textContent = 'start listening';
 }
 
-async function finish(packets) {
+// options: done (false when the audio ended mid-transfer), fromTonic, and setName, as importTransfer takes them.
+async function finish(packets, { done = true, ...options } = {}) {
 	stopListening();
 	const draft = structuredClone(vault);
-	const result = await importTransfer(draft, packets);
+	const result = await importTransfer(draft, packets, undefined, options);
 
 	$('new-count').textContent = result.newPatterns.length;
 	$('known-count').textContent = result.knownPatterns.length;
 	$('sounds-mark').textContent = result.soundSet ? (result.newSoundSet ? '+' : '=') : '–';
 	$('sounds-label').textContent = result.soundSet ? (result.newSoundSet ? 'new sounds' : `sounds ${result.soundSet.name || 'known'}`) : 'no sounds';
 	const notes = [];
-	if (result.state) notes.push(`tonic was at ${result.state.tempo} bpm · swing ${result.state.swing}; saved with each new pattern.`);
+	if (!done) notes.push(`the audio ended before the transfer finished, so only ${packets.length} packets came through.`);
+	if (result.state) notes.push(`${options.fromTonic === false ? 'the file' : 'the tonic'} was at ${result.state.tempo} bpm · swing ${result.state.swing}; saved with each new pattern.`);
 	if (result.movedPatterns.length) notes.push(`${result.movedPatterns.length} known pattern${result.movedPatterns.length === 1 ? '' : 's'} changed slots.`);
 	$('results-note').textContent = notes.join(' ');
 
 	$('name-list').replaceChildren(...result.newPatterns.map((p) => {
 		const row = document.createElement('label');
 		row.className = 'name-row';
-		row.innerHTML = `<span class="slot"><span class="dim small">slot</span><b>${p.slot}</b></span><input type="text" placeholder="name it…" aria-label="name for slot ${p.slot}">`;
+		row.innerHTML = `<span class="slot"><span class="dim small">slot</span><b>${p.slot}</b></span><input type="text" placeholder="${patternName(p, draft)}" aria-label="name for slot ${p.slot}">`;
 		row.querySelector('input').addEventListener('input', (e) => { p.name = e.target.value.trim(); });
 		return row;
 	}));
@@ -170,6 +172,28 @@ async function finish(packets) {
 	};
 	$('results').hidden = false;
 }
+
+// Decodes a transfer saved as audio, such as a TE sound pack's data .wav. A pack's file name names its sound set.
+async function importFile(file) {
+	$('file-status').textContent = `reading ${file.name}…`;
+	try {
+		const ctx = new OfflineAudioContext(1, 1, 48000);
+		const audio = await ctx.decodeAudioData(await file.arrayBuffer());
+		decoder.reset(audio.sampleRate);
+		const out = decoder.push(audio.getChannelData(0));
+		if (!out.packets.length) throw new Error('no tonic data found in it');
+		$('file-status').textContent = '';
+		const setName = file.name.replace(/\.wav$/i, '').replace(/po-?32/i, '').replace(/[-_ ]*data$/i, '').replace(/_/g, ' ').replace(/^[-\s]+|[-\s]+$/g, '');
+		await finish(out.packets, { done: out.done, fromTonic: false, setName });
+	} catch (err) {
+		$('file-status').textContent = `couldn't import ${file.name}: ${err.message}`;
+	}
+}
+
+$('file').addEventListener('change', (e) => {
+	if (e.target.files[0]) importFile(e.target.files[0]);
+	e.target.value = '';
+});
 
 // Cable or over the air only changes the setup hints. The choice is remembered per browser.
 function showConnection(kind) {

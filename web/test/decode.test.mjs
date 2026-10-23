@@ -81,3 +81,11 @@ test('renders an audible hit of every sound', async () => {
 		assert.ok(samples.reduce((peak, s) => Math.max(peak, Math.abs(s)), 0) > 0.01);
 	}
 });
+
+test('a file import names its sound set and leaves the tonic alone', async () => {
+	const { packets } = await decodeFixture();
+	const vault = emptyVault();
+	const result = await importTransfer(vault, packets, undefined, { fromTonic: false, setName: 'basic beats 1' });
+	assert.equal(vault.tonic, null);
+	assert.equal(result.soundSet.name, 'basic beats 1');
+});

@@ -174,3 +174,4 @@ a { color: var(--cream); }
 .connection { display: flex; flex-direction: column; align-items: center; gap: 10px; height: auto; padding: 16px 8px 12px; border: 1px solid var(--line); background: transparent; color: var(--cream); font-weight: 300; }
 .connection .label { font-size: 17px; font-weight: 400; }
 .connection[aria-pressed="true"] { border-color: var(--cream); background: var(--cream); color: var(--ground); }
+.kit button:disabled { opacity: 0.35; }

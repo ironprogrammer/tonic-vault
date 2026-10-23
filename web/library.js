@@ -50,10 +50,14 @@ function renderKit() {
 	hearSetId = set?.id ?? null;
 	if (!set) return;
 	const playable = playableSoundSet(set);
-	$('kit').replaceChildren(...FACTORY_SOUNDS.map((name, i) => el('button', {
-		type: 'button',
-		onclick: () => player.audition(playable, i + 1),
-	}, el('span', { class: 'dim tiny' }, String(i + 1)), el('span', { class: 'ellipsis' }, name))));
+	$('kit').replaceChildren(...FACTORY_SOUNDS.map((name, i) => {
+		const button = el('button', {
+			type: 'button',
+			onclick: () => player.audition(playable, i + 1),
+		}, el('span', { class: 'dim tiny' }, String(i + 1)), el('span', { class: 'ellipsis' }, name));
+		button.disabled = !playable.patches[i + 1]?.right;
+		return button;
+	}));
 }
 
 function stepStrip(parsed) {
@@ -85,7 +89,7 @@ function visiblePatterns() {
 function playButton(pattern, parsed) {
 	const set = playableSoundSet(vault.soundSets.find((s) => s.id === pattern.soundSetId));
 	const on = playingId === pattern.id;
-	const button = el('button', { type: 'button', class: `round${on ? ' playing' : ''}`, 'aria-label': `${on ? 'stop' : 'play'} ${patternName(pattern)}`, html: on ? STOP_ICON : PLAY_ICON });
+	const button = el('button', { type: 'button', class: `round${on ? ' playing' : ''}`, 'aria-label': `${on ? 'stop' : 'play'} ${patternName(pattern, vault)}`, html: on ? STOP_ICON : PLAY_ICON });
 	button.disabled = !set;
 	button.addEventListener('click', () => {
 		if (on) return player.stop();
@@ -104,7 +108,7 @@ function renderPatterns() {
 	const rows = visiblePatterns().map((p) => {
 		const parsed = parsePattern(fromBase64(p.raw));
 		const meta = [`slot ${p.slot}`, shortDate(p.firstSeen), ...p.tags].join(' · ');
-		const box = el('input', { type: 'checkbox', 'aria-label': `select ${patternName(p)}` });
+		const box = el('input', { type: 'checkbox', 'aria-label': `select ${patternName(p, vault)}` });
 		box.checked = selected.has(p.id);
 		box.addEventListener('change', () => {
 			box.checked ? selected.add(p.id) : selected.delete(p.id);
@@ -113,7 +117,7 @@ function renderPatterns() {
 		return el('div', { class: `pattern-row${selected.has(p.id) ? ' selected' : ''}` },
 			el('label', { class: 'check' }, box),
 			el('a', { href: `pattern.html?id=${p.id}`, class: 'pattern-link' },
-				el('span', { class: 'split' }, el('span', { class: 'name ellipsis' }, patternName(p)), el('span', { class: 'dim small' }, `${p.bpm} · sw ${p.swing}`)),
+				el('span', { class: 'split' }, el('span', { class: 'name ellipsis' }, patternName(p, vault)), el('span', { class: 'dim small' }, `${p.bpm} · sw ${p.swing}`)),
 				stepStrip(parsed),
 				el('span', { class: 'meta dim small' }, meta, ...(isNew(vault, p) ? [el('span', { class: 'badge' }, 'new')] : []))),
 			playButton(p, parsed));

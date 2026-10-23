@@ -1,6 +1,6 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
 import { FACTORY_SOUNDS, fromBase64, parsePattern, playableSoundSet } from './pattern.js';
-import { isNew, loadVault, saveVault, shortDate } from './vault.js';
+import { isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 const vault = loadVault();
@@ -85,11 +85,11 @@ if (!pattern) {
 	const parsed = parsePattern(fromBase64(pattern.raw));
 	const set = vault.soundSets.find((s) => s.id === pattern.soundSetId);
 	const playable = playableSoundSet(set);
-	document.title = `Tonic vault ${pattern.name || `slot ${pattern.slot}`}`;
+	document.title = `Tonic vault ${patternName(pattern, vault)}`;
 	$('meta').textContent = [`slot ${pattern.slot}`, set ? `sounds ${set.name || shortDate(set.firstSeen)}` : 'sounds missing', shortDate(pattern.firstSeen)].join(' · ');
 	$('new').hidden = !isNew(vault, pattern);
 	$('name').value = pattern.name;
-	$('name').placeholder = `untitled · slot ${pattern.slot}`;
+	$('name').placeholder = patternName({ ...pattern, name: '' }, vault);
 	$('name').addEventListener('change', () => { pattern.name = $('name').value.trim(); save(); });
 
 	// The player reads pattern.bpm and pattern.swing every step, so edits apply while it plays.

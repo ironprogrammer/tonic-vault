@@ -23,7 +23,7 @@ Plan: compile it to WASM and use it for decode, encode, and in-browser playback.
   - Lanes are channel columns: sounds 1/5/9/13, 2/6/10/14, 3/7/11/15, and 4/8/12/16. Only one sound per lane can fire on a step.
   - Each trigger byte's low nibble is the step multiplier (hold step + m), stored as the number the Tonic shows: t-01, t-02, t-03, t-04, t-06, and t-08 are 1, 2, 3, 4, 6, and 8. libpo32 calls it `fill_rate`.
   - There are 16 reserved bytes that libpo32 writes as zeros.
-- **State:** tempo (one byte), swing (0–18; the Tonic shows S00–S18, where the seven-segment S looks like a 5, so it reads as 500–518; libpo32 calls it `swing_times_12`), morph defaults, and the chain as a list of zero-based pattern numbers, repeats included. libpo32's typed decode rejects lists longer than 16, so longer chains need a fix there or raw parsing. **Tempo and swing are global on the device.** In the vault they're per-pattern fields the user sets in pattern detail. Import fills them from the state packet as a starting value.
+- **State:** tempo (one byte), swing (0–18; the Tonic shows S00–S18; libpo32 calls it `swing_times_12`), morph defaults, and the chain as a list of zero-based pattern numbers, repeats included. libpo32's typed decode rejects lists longer than 16, so longer chains need a fix there or raw parsing. **Tempo and swing are global on the device.** In the vault they're per-pattern fields the user sets in pattern detail. Import fills them from the state packet as a starting value.
 
 ## Data model (initial)
 

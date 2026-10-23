@@ -90,7 +90,8 @@ export function createPlayer(synth) {
 		play(pattern, soundSet, timing, onStep = () => {}) {
 			stop();
 			context();
-			for (const h of pattern.hits) hitBuffer(soundSet, h.sound, h.morph, h.accent);
+			const hits = pattern.hits.filter((h) => soundSet.patches[h.sound]?.right);
+			for (const h of hits) hitBuffer(soundSet, h.sound, h.morph, h.accent);
 
 			const queue = [];
 			let step = 0;
@@ -99,7 +100,7 @@ export function createPlayer(synth) {
 				while (next < ctx.currentTime + LOOKAHEAD) {
 					const length = 60 / timing.bpm / 4;
 					const at = next + (step % 2 ? length * 2 * timing.swing / 100 : 0);
-					for (const h of pattern.hits.filter((h) => h.step === step)) {
+					for (const h of hits.filter((h) => h.step === step)) {
 						const buffer = hitBuffer(soundSet, h.sound, h.morph, h.accent);
 						for (let k = 0; k < h.multiplier; k++) start(buffer, h.lane, at + (k * length) / h.multiplier);
 					}

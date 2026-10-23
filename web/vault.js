@@ -46,8 +46,11 @@ function readState(payload) {
 	return { tempo: payload[32], swing: payload[33], chain: Array.from(payload.subarray(35, 35 + count), (n) => n + 1) };
 }
 
-// Merges one transfer's packets into the vault and reports what was new. Mutates and returns the vault.
-export async function importTransfer(vault, packets, now = new Date().toISOString()) {
+/*
+ * Merges one transfer's packets into the vault and reports what was new. Mutates the vault.
+ * A transfer read from a file (fromTonic false) says nothing about what's on the Tonic, and setName names a new sound set.
+ */
+export async function importTransfer(vault, packets, now = new Date().toISOString(), { fromTonic = true, setName = '' } = {}) {
 	const patches = packets.filter((p) => p.tag === TAG.patch);
 	const patterns = packets.filter((p) => p.tag === TAG.pattern);
 	const statePacket = packets.find((p) => p.tag === TAG.state);
@@ -62,7 +65,7 @@ export async function importTransfer(vault, packets, now = new Date().toISOStrin
 		if (set) {
 			set.lastSeen = now;
 		} else {
-			set = { id, name: '', sounds: patches.map((p) => toBase64(p.payload)), firstSeen: now, lastSeen: now };
+			set = { id, name: setName, sounds: patches.map((p) => toBase64(p.payload)), firstSeen: now, lastSeen: now };
 			vault.soundSets.push(set);
 			result.newSoundSet = true;
 		}
@@ -76,8 +79,10 @@ export async function importTransfer(vault, packets, now = new Date().toISOStrin
 		const id = await hash(payload.subarray(1));
 		let pattern = vault.patterns.find((p) => p.id === id);
 		if (pattern) {
-			if (pattern.slot !== slot) result.movedPatterns.push(pattern);
-			pattern.slot = slot;
+			if (fromTonic && pattern.slot !== slot) {
+				result.movedPatterns.push(pattern);
+				pattern.slot = slot;
+			}
 			pattern.lastSeen = now;
 			result.knownPatterns.push(pattern);
 		} else {
@@ -99,14 +104,16 @@ export async function importTransfer(vault, packets, now = new Date().toISOStrin
 		slots[slot - 1] = id;
 	}
 
-	if (patterns.length) {
+	if (fromTonic && patterns.length) {
 		vault.tonic = { seen: now, soundSetId: result.soundSet?.id ?? vault.tonic?.soundSetId ?? null, slots, ...state };
 	}
 	return result;
 }
 
-export function patternName(pattern) {
-	return pattern.name || `untitled · slot ${pattern.slot}`;
+// Unnamed patterns go by their sound set's name, such as a TE sound pack's, and their slot.
+export function patternName(pattern, vault) {
+	const set = vault.soundSets.find((s) => s.id === pattern.soundSetId);
+	return pattern.name || `${set?.name || 'untitled'} · slot ${pattern.slot}`;
 }
 
 // Dates show the way the mock does, month.day, in local time.
