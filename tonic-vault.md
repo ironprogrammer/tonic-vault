@@ -32,8 +32,10 @@ The vault is a single JSON document. It lives in localStorage and can be downloa
 ```json
 {
 	"version": 1,
-	"soundSets": [ { "id": "<hash>", "name": "factory", "sounds": [ /* 16 decoded patches + raw bytes */ ], "soundNames": [ "kick 1", /* 16 in all, "" when unknown */ ], "firstSeen": "", "lastSeen": "" } ],
-	"patterns": [ { "id": "<hash>", "name": "", "tags": [], "bpm": 120, "swing": 20, "soundSetId": "<hash>", "slot": 9, "firstSeen": "", "lastSeen": "", "raw": "<base64 payload>" } ]
+	"soundSets": [ { "id": "<hash>", "name": "factory", "sounds": [ /* base64 patch payloads */ ], "soundNames": [ "kick 1", /* 16 in all, "" when unknown */ ], "knobs": "<base64 morph pairs from the last state packet>", "firstSeen": "", "lastSeen": "" } ],
+	"patterns": [ { "id": "<hash>", "name": "", "tags": [], "bpm": 120, "swing": 6, "soundSetId": "<hash>", "slot": 9, "firstSeen": "", "lastSeen": "", "raw": "<base64 payload>" } ],
+	"tonic": { "seen": "", "soundSetId": "<hash>", "slots": [ /* 16 pattern ids or null */ ], "tempo": 120, "swing": 6, "chain": [ 1, 2 ] },
+	"export": { "slots": [ /* 16 pattern ids or null */ ], "pending": [ /* ids waiting for a slot */ ], "soundSetId": null, "sendState": false }
 }
 ```
 
@@ -97,6 +99,9 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Working: the library (`index.html`) and pattern detail (`pattern.html`), with sounds you can audition and patterns that loop through libpo32's synth. Morph, accents, multipliers, and the four channels cutting off their own hits all play. Pitch locks, effects, and add to export don't yet. Swing's timing curve is a guess.
    - Still to do: PWA install, measuring the Tonic's swing timing from a line-out recording, and checking playback against the Tonic by ear (slot 2 has a new pattern from 10.23 to compare after the next import).
 3. **Export.** Compose the patterns to send, render the transfer audio, play it into the Tonic, and download it as a WAV.
+   - Built (`export.html`): the slot grid, sounds and tempo/swing/chain options, send with progress and stop, and the backup .wav. "Add to export" in the library and pattern detail puts patterns in their last slot, or queues them for the export screen to place when that slot is taken. A test renders an export and decodes it back to the same packets.
+   - Not yet tried on the Tonic. Not built: editing the chain (it's the sent slots in order).
+   - Sending the state packet also sets the Tonic's knob positions. They come from the sound set's last state packet, which the vault only stores from imports made after 10.23; without one, libpo32's defaults are sent.
 4. **MIDI.** Map slots to drum notes (GM by default, editable), accents to velocity, and parameter locks to CC.
 5. **Later.** Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
 
@@ -105,7 +110,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 - `make -C phase0` builds libpo32's decoder, demo, and pattern editor natively with clang. cmake isn't needed.
 - `phase0/build/frame <tag-hex>:<payload.bin> ...` builds a transfer from raw packet payloads (such as the `payload.bin` files `po32_decode_capture` writes) and prints 48 kHz f32 audio. Pipe it through `sox -t f32 -r 48000 -c 1 - -b 16 out.wav gain -3`, then `play out.wav` with the Tonic in receive mode.
 - The pinned libpo32 commit is only on the PR, so a fresh clone needs `git -C vendor/libpo32 fetch origin pull/20/head` before `git submodule update`.
-- `make -C web` builds `po32.wasm` (decoder and synth), and `make -C web test` runs the node tests against the fixture below. The app is static files in `web/`: `index.html` (library), `import.html`, and `pattern.html`.
+- `make -C web` builds `po32.wasm` (decoder, synth, and encoder), and `make -C web test` runs the node tests against the fixture below. The app is static files in `web/`: `index.html` (library), `import.html`, `export.html`, and `pattern.html`.
 - `tests/fixtures/tonic-backup-2026-10-22.wav` is a real Tonic backup (cable, 48 kHz mono, 49 packets) so decode work doesn't need a fresh transfer each time. New captures land in the gitignored `phase0/captures/`.
 
 ## Connecting the Tonic

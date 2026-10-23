@@ -1,6 +1,6 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
-import { emptyVault, isNew, loadVault, patternName, saveVault, shortDate, upgradeVault } from './vault.js';
+import { addToExport, emptyVault, isNew, loadVault, patternName, saveVault, shortDate, upgradeVault } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 let vault = loadVault();
@@ -180,6 +180,8 @@ function renderSelection() {
 function render() {
 	const n = vault.patterns.length;
 	$('vault-count').textContent = `${n} pattern${n === 1 ? '' : 's'}`;
+	const queued = vault.export.slots.filter(Boolean).length;
+	$('export-count').textContent = queued ? ` · ${queued} ready` : '';
 	renderFilters();
 	renderPatterns();
 	renderKit();
@@ -224,6 +226,11 @@ $('download').addEventListener('click', downloadVault);
 $('load').addEventListener('change', (e) => {
 	if (e.target.files[0]) loadFile(e.target.files[0]);
 	e.target.value = '';
+});
+$('add-selected').addEventListener('click', () => {
+	addToExport(vault, [...selected]);
+	saveVault(vault);
+	location.href = 'export.html';
 });
 $('delete-selected').addEventListener('click', () => {
 	if (!confirm(`delete ${selected.size} pattern${selected.size === 1 ? '' : 's'}?`)) return;

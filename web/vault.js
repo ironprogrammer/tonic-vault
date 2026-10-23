@@ -23,11 +23,17 @@ function seedSoundNames(set) {
 // Fills in anything a vault saved by an older version lacks.
 export function upgradeVault(vault) {
 	vault.soundSets.forEach(seedSoundNames);
+	vault.export ??= emptyExport();
 	return vault;
 }
 
 export function emptyVault() {
-	return { version: 1, soundSets: [], patterns: [], tonic: null };
+	return { version: 1, soundSets: [], patterns: [], tonic: null, export: emptyExport() };
+}
+
+// What to send next: a pattern id per slot (null leaves the Tonic's), patterns waiting for a slot, and options.
+function emptyExport() {
+	return { slots: Array(16).fill(null), pending: [], soundSetId: null, sendState: false };
 }
 
 export function loadVault(storage = globalThis.localStorage) {
@@ -92,6 +98,8 @@ export async function importTransfer(vault, packets, now = new Date().toISOStrin
 			result.newSoundSet = true;
 		}
 		result.soundSet = set;
+		// The state packet's morph pairs are the knob positions that go with these sounds, needed to send them back.
+		if (statePacket) set.knobs = toBase64(statePacket.payload.subarray(0, 32));
 	}
 
 	const slots = Array(16).fill(null);
@@ -148,4 +156,15 @@ export function shortDate(iso) {
 // The patterns from the most recent import are the new ones.
 export function isNew(vault, pattern) {
 	return pattern.firstSeen === vault.tonic?.seen;
+}
+
+// Puts patterns in their last slot when it's free in the export, and queues the rest to be given a slot.
+export function addToExport(vault, ids) {
+	const plan = vault.export;
+	for (const id of ids) {
+		const pattern = vault.patterns.find((p) => p.id === id);
+		if (!pattern || plan.slots.includes(id) || plan.pending.includes(id)) continue;
+		if (plan.slots[pattern.slot - 1]) plan.pending.push(id);
+		else plan.slots[pattern.slot - 1] = id;
+	}
 }

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tonic vault export</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="exporter.js"></script>
+</head>
+<body>
+<main>
+
+<header class="top">
+	<a href="./" class="square" aria-label="back to library"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></a>
+	<div>
+		<h1>export</h1>
+		<p class="dim">vault → tonic</p>
+	</div>
+</header>
+
+<section>
+	<div class="split">
+		<h2>1 — patterns</h2>
+		<span id="slot-count" class="dim small"></span>
+	</div>
+	<div id="pending" class="pending" hidden>
+		<span id="pending-label"></span>
+		<button id="pending-skip" type="button" class="link">skip</button>
+	</div>
+	<div id="slots" class="slots"></div>
+	<p class="dim small">filled slots overwrite the tonic's. other slots aren't sent and keep what was last on the tonic, shown dimmed.</p>
+	<div id="picker" class="picker" hidden>
+		<div class="split center">
+			<span id="picker-title" class="big"></span>
+			<button id="picker-close" type="button" class="link">done</button>
+		</div>
+		<div id="picker-list" class="list"></div>
+	</div>
+	<div class="list">
+		<label class="option">
+			<input id="sounds" type="checkbox">
+			<span class="grow">
+				<span>include sounds</span>
+				<span id="sounds-note" class="dim small"></span>
+			</span>
+			<select id="sound-set" aria-label="sounds to send"></select>
+		</label>
+		<label class="option">
+			<input id="state" type="checkbox">
+			<span class="grow">
+				<span>tempo, swing, and chain</span>
+				<span id="state-note" class="dim small"></span>
+			</span>
+			<span id="state-value" class="big"></span>
+		</label>
+	</div>
+</section>
+
+<section>
+	<h2>2 — receive data</h2>
+	<div class="connections">
+		<button type="button" class="connection row-connection" data-connection="cable" aria-pressed="true"><svg data-icon="jack" width="7" height="40" viewBox="396 112 60 366" fill="currentColor" aria-hidden="true"><g><path d="M413.276 151.677h26.02v.046l.416-.046v-4.068l-2.846-2.846 1.627-20.744-9.76-9.76h-4.884l-9.76 9.76 1.627 20.744-2.847 2.845v4.067zM440.525 229.76v-74.017H412.056v20.332h28.455v4.069h-28.453v49.615h-4.072v4.07h36.602v-4.07z"></path></g><path d="M426.21 233.83H398.47l-.268 73.903 3.325 35.903h13.494v8.4H402.03l2.312 24.134h10.682v8.134h-9.936l1.01 12.202 19.977-.114h.09l19.978.114 1.01-12.202h-9.937v-8.134h10.682l2.31-24.134h-12.992v-8.4h13.495l3.326-35.903-.268-73.903zM415.184 396.394h21.87v79.346h-21.87z"></path></svg><span>cable to line in</span></button>
+		<button type="button" class="connection row-connection" data-connection="air" aria-pressed="false"><svg data-icon="mic" width="21" height="40" viewBox="124 112 187 366" fill="currentColor" aria-hidden="true"><path d="M286.54 220.282H148.73v-36.696c0-38.07 30.85-68.92 68.906-68.92 38.055 0 68.906 30.85 68.906 68.92v36.696zM170.666 190.25c-5.73 0-10.36 4.648-10.36 10.362s4.63 10.36 10.36 10.36c5.73 0 10.347-4.646 10.347-10.36s-4.618-10.362-10.347-10.362m31.362 0c-5.714 0-10.36 4.648-10.36 10.362s4.646 10.36 10.36 10.36c5.73 0 10.362-4.646 10.362-10.36s-4.634-10.362-10.363-10.362m31.362 0c-5.715 0-10.347 4.648-10.347 10.362s4.632 10.36 10.346 10.36c5.728 0 10.36-4.646 10.36-10.36s-4.632-10.362-10.36-10.362m31.376 0c-5.73 0-10.36 4.648-10.36 10.362s4.63 10.36 10.36 10.36c5.714 0 10.347-4.646 10.347-10.36s-4.633-10.362-10.347-10.362m-94.1-31.48c-5.73 0-10.362 4.648-10.362 10.363 0 5.714 4.632 10.36 10.36 10.36 5.73 0 10.348-4.646 10.348-10.36 0-5.715-4.618-10.362-10.347-10.362m31.362 0c-5.714 0-10.36 4.648-10.36 10.363 0 5.714 4.646 10.36 10.36 10.36 5.73 0 10.362-4.646 10.362-10.36 0-5.715-4.634-10.362-10.363-10.362m31.362 0c-5.715 0-10.347 4.648-10.347 10.363 0 5.714 4.632 10.36 10.346 10.36 5.728 0 10.36-4.646 10.36-10.36 0-5.715-4.632-10.362-10.36-10.362m31.376 0c-5.73 0-10.36 4.648-10.36 10.363 0 5.714 4.63 10.36 10.36 10.36 5.714 0 10.347-4.646 10.347-10.36 0-5.715-4.633-10.362-10.347-10.362m-62.812-30.513c-5.73 0-10.36 4.633-10.36 10.347 0 5.73 4.63 10.362 10.36 10.362 5.714 0 10.362-4.633 10.362-10.362 0-5.714-4.647-10.347-10.362-10.347m31.363 0c-5.73 0-10.362 4.633-10.362 10.347 0 5.73 4.632 10.362 10.362 10.362 5.714 0 10.346-4.633 10.346-10.362 0-5.714-4.632-10.347-10.346-10.347"></path><path d="M286.6 321.886v37.646c0 38.026-30.938 68.964-68.965 68.964-38.026 0-68.964-30.938-68.964-68.964v-37.646h-20.707v37.646c0 46.078 34.942 84.12 79.735 89.088v26.714h20.708v-26.846c44.383-5.334 78.902-43.156 78.902-88.956v-37.646H286.6zM216.097 304.92c-5.73 0-10.347 4.633-10.347 10.347 0 5.73 4.618 10.362 10.347 10.362 5.73 0 10.346-4.634 10.346-10.363 0-5.714-4.618-10.347-10.346-10.347"></path></svg><span>speaker to mic</span></button>
+	</div>
+	<div class="combo">
+		<div class="keys">
+			<span><img src="icons/key-held.svg" alt="" width="56" height="56">acc</span>
+			<span class="plus">+</span>
+			<span><img src="icons/key-pressed.svg" alt="" width="56" height="56">sound</span>
+		</div>
+		<p class="dim small center-text">on the tonic: press acc + sound to enter receive mode, then tap send.</p>
+		<p class="dim small center-text" data-for="cable">computer volume about 75%, other audio muted.</p>
+		<p class="dim small center-text" data-for="air" hidden>speaker close to the tonic's mic, volume up, room quiet.</p>
+	</div>
+	<button id="send" class="primary">send to tonic</button>
+	<p id="send-note" class="dim small"></p>
+</section>
+
+<section id="sending" class="panel" hidden>
+	<div class="split">
+		<span id="sending-title" class="big">sending</span>
+		<span id="sending-time" class="big"></span>
+	</div>
+	<div id="progress" class="progress" aria-hidden="true"></div>
+	<span id="sending-now" class="small"></span>
+	<button id="stop" class="outline-dark">stop</button>
+</section>
+
+<section>
+	<button id="download" class="outline icon-text center-content"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"/></svg>download backup .wav</button>
+	<p class="dim small">play it from any device to restore these patterns later.</p>
+</section>
+
+</main>
+</body>
+</html>

@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { loadDecoder, loadSynth, TAG } from '../po32.js';
+import { loadDecoder, loadEncoder, loadSynth, TAG } from '../po32.js';
+import { exportPackets } from '../transfer.js';
 import { parsePattern, soundPatches } from '../pattern.js';
-import { emptyVault, importTransfer } from '../vault.js';
+import { addToExport, emptyVault, importTransfer } from '../vault.js';
 
 const wasmUrl = new URL('../po32.wasm', import.meta.url);
 const fixtureUrl = new URL('../../tests/fixtures/tonic-backup-2026-10-22.wav', import.meta.url);
@@ -95,4 +96,22 @@ test('a file import names its sound set and leaves the tonic alone', async () =>
 	assert.equal(vault.tonic, null);
 	assert.equal(result.soundSet.name, 'basic beats 1');
 	assert.equal(result.soundSet.soundNames[2], 'shaker / zap');
+});
+
+test('an exported transfer decodes back to the same packets', async () => {
+	const { packets } = await decodeFixture();
+	const vault = emptyVault();
+	await importTransfer(vault, packets);
+	vault.export.soundSetId = vault.soundSets[0].id;
+	addToExport(vault, vault.patterns.filter((p) => [1, 6, 9].includes(p.slot)).map((p) => p.id));
+	const plan = exportPackets(vault);
+	assert.deepEqual(plan.state.chain, [1, 6, 9]);
+
+	const encoder = await loadEncoder(await readFile(wasmUrl));
+	const { samples } = encoder.render(plan.packets, 48000);
+	const decoder = await loadDecoder(await readFile(wasmUrl));
+	decoder.reset(48000);
+	const out = decoder.push(samples);
+	assert.equal(out.done, true);
+	assert.deepEqual(out.packets.map((p) => [p.tag, [...p.payload]]), plan.packets.map((p) => [p.tag, [...p.payload]]));
 });

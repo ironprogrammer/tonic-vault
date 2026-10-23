@@ -51,3 +51,31 @@ export async function loadSynth(wasmBytes) {
 		},
 	};
 }
+
+export async function loadEncoder(wasmBytes) {
+	const { instance } = await WebAssembly.instantiate(wasmBytes);
+	const po32 = instance.exports;
+
+	return {
+		/*
+		 * Renders packets ([{ tag, payload }]) as one transfer's modem audio.
+		 * Returns the samples, plus each packet's start as a fraction of the whole for progress.
+		 */
+		render(packets, sampleRate) {
+			po32.frame_begin();
+			const offsets = packets.map(({ tag, payload }) => {
+				new Uint8Array(po32.memory.buffer, po32.payload_buffer(), payload.length).set(payload);
+				const offset = po32.frame_add(tag, payload.length);
+				if (offset < 0) throw new Error('packet rejected');
+				return offset;
+			});
+			const length = po32.frame_finish(4);
+			if (length < 0) throw new Error('frame rejected');
+			const samples = new Float32Array(po32.modulator_start(sampleRate));
+			for (let at = 0, n; (n = po32.modulator_render()) > 0; at += n) {
+				samples.set(new Float32Array(po32.memory.buffer, po32.output_buffer(), n), at);
+			}
+			return { samples, starts: offsets.map((o) => o / length) };
+		},
+	};
+}

@@ -1,6 +1,6 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
-import { isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
+import { addToExport, isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 const vault = loadVault();
@@ -127,6 +127,13 @@ if (!pattern) {
 			if (step === null) setPlayIcon(false);
 		});
 		setPlayIcon(true);
+	});
+	// Its last slot if that's free in the export; otherwise the export screen asks for one.
+	$('add-export').addEventListener('click', () => {
+		player.stop();
+		addToExport(vault, [pattern.id]);
+		save();
+		location.href = 'export.html';
 	});
 	$('delete').addEventListener('click', () => {
 		if (!confirm('delete this pattern?')) return;
