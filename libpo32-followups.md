@@ -51,3 +51,5 @@ The top 2 bits usually match the step's beat (0–3), but not always (`10` on st
 ## Step morph values in the pattern editor
 
 For each active step, the Tonic stores the sound's own morph pair (for example `36 04` for the factory kick). `po32_pattern_editor` writes a fixed `80 01`. The Tonic accepts it, but the hit may not sound like the Tonic's own entry would.
+
+The pair's first byte is called `flag` in `po32_morph_pair_t`, but in Tonic captures both bytes vary over the full 0–255 range, as two knobs would (pitch and morph is the likely pair). Worth confirming, then renaming the field.

@@ -3,7 +3,7 @@ import { importTransfer, loadVault, saveVault } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 const decoder = await loadDecoder(await (await fetch('po32.wasm')).arrayBuffer());
-let vault = loadVault();
+const vault = loadVault();
 let capture = null;
 
 function showVaultCount() {
@@ -165,26 +165,14 @@ async function finish(packets) {
 	}));
 	$('save').textContent = result.newPatterns.length ? `save ${result.newPatterns.length} to vault` : 'save';
 	$('save').onclick = () => {
-		vault = draft;
-		saveVault(vault);
-		showVaultCount();
-		$('results').hidden = true;
+		saveVault(draft);
+		location.href = './';
 	};
 	$('results').hidden = false;
-}
-
-function downloadVault() {
-	const blob = new Blob([JSON.stringify(vault, null, '\t')], { type: 'application/json' });
-	const a = document.createElement('a');
-	a.href = URL.createObjectURL(blob);
-	a.download = `tonic-vault-${new Date().toISOString().slice(0, 10)}.json`;
-	a.click();
-	URL.revokeObjectURL(a.href);
 }
 
 $('listen').addEventListener('click', listen);
 $('cancel').addEventListener('click', stopListening);
 $('again').addEventListener('click', () => { $('results').hidden = true; listen(); });
-$('download').addEventListener('click', downloadVault);
 showVaultCount();
 listInputs();

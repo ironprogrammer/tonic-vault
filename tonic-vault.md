@@ -19,6 +19,7 @@ Plan: compile it to WASM and use it for decode, encode, and in-browser playback.
 
 - **Sounds:** the 16 sounds on the device. Only one set of 16 is on the Tonic at a time. The vault saves each distinct set of 16 as a sound set. Each sound has left/right patch endpoints, and the morph knob blends between them.
 - **Pattern:** 16 steps × 4 lanes, plus per-step morph pairs (parameter locks) and an accent bitmask. Each pattern packet carries its own slot number.
+  - Every hit stores the two knob bytes it was recorded with, not only locked ones. The app reads them as pitch then morph, following libpo32's name for the second byte; that order hasn't been checked by ear yet. A hit whose bytes differ from that sound's most common bytes in the pattern shows as a parameter lock.
   - Lanes are channel columns: sounds 1/5/9/13, 2/6/10/14, 3/7/11/15, and 4/8/12/16. Only one sound per lane can fire on a step.
   - Each trigger byte's low nibble is the step multiplier (hold step + m), stored as the number the Tonic shows: t-01, t-02, t-03, t-04, t-06, and t-08 are 1, 2, 3, 4, 6, and 8. libpo32 calls it `fill_rate`.
   - There are 16 reserved bytes that libpo32 writes as zeros.
@@ -94,6 +95,8 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Chains are transferred, in the state packet (see Device model). The first Tonic capture's chain was a single pattern (6).
 1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON. Working: a full Tonic transfer imported in Chrome on 10.22 (`web/`, served at https://tonic-vault.test).
 2. **Library and playback.** The screens from the mock, with playback through the WASM synth. Installable as a PWA so it works on a phone.
+   - Working: the library (`index.html`) and pattern detail (`pattern.html`), with sounds you can audition and patterns that loop through libpo32's synth. Morph, accents, multipliers, and the four channels cutting off their own hits all play. Pitch locks, effects, and add to export don't yet. Swing's timing curve is a guess.
+   - Still to do: PWA install, and checking playback against the Tonic by ear.
 3. **Export.** Compose the patterns to send, render the transfer audio, play it into the Tonic, and download it as a WAV.
 4. **MIDI.** Map slots to drum notes (GM by default, editable), accents to velocity, and parameter locks to CC.
 5. **Later.** Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
@@ -102,6 +105,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 
 - `make -C phase0` builds libpo32's decoder, demo, and pattern editor natively with clang. cmake isn't needed.
 - `phase0/build/frame <tag-hex>:<payload.bin> ...` builds a transfer from raw packet payloads (such as the `payload.bin` files `po32_decode_capture` writes) and prints 48 kHz f32 audio. Pipe it through `sox -t f32 -r 48000 -c 1 - -b 16 out.wav gain -3`, then `play out.wav` with the Tonic in receive mode.
+- `make -C web` builds `po32.wasm` (decoder and synth), and `make -C web test` runs the node tests against the fixture below. The app is static files in `web/`: `index.html` (library), `import.html`, and `pattern.html`.
 - `tests/fixtures/tonic-backup-2026-10-22.wav` is a real Tonic backup (cable, 48 kHz mono, 49 packets) so decode work doesn't need a fresh transfer each time. New captures land in the gitignored `phase0/captures/`.
 
 ## Connecting the Tonic

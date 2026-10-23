@@ -33,3 +33,21 @@ export async function loadDecoder(wasmBytes) {
 		},
 	};
 }
+
+export async function loadSynth(wasmBytes) {
+	const { instance } = await WebAssembly.instantiate(wasmBytes);
+	const po32 = instance.exports;
+	const size = 43;
+
+	return {
+		// Renders one hit of a sound from its left and right patch payloads. morph is 0-1, velocity is MIDI 0-127.
+		render(left, right, { sampleRate, morph = 0, velocity = 100, seconds = 3 }) {
+			const patches = new Uint8Array(po32.memory.buffer, po32.patch_buffer(), size * 2);
+			patches.set(left);
+			patches.set(right, size);
+			const len = po32.render_hit(sampleRate, morph, velocity, Math.min(seconds, po32.output_capacity() / sampleRate));
+			if (len < 0) throw new Error('bad patch payload');
+			return new Float32Array(po32.memory.buffer, po32.output_buffer(), len).slice();
+		},
+	};
+}

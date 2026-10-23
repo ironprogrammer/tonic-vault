@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { loadDecoder, TAG } from '../po32.js';
+import { loadDecoder, loadSynth, TAG } from '../po32.js';
+import { parsePattern, soundPatches } from '../pattern.js';
 import { emptyVault, importTransfer } from '../vault.js';
 
 const wasmUrl = new URL('../po32.wasm', import.meta.url);
@@ -60,4 +61,23 @@ test('a second import of the same transfer finds nothing new', async () => {
 	assert.equal(second.knownPatterns.length, first.newPatterns.length);
 	assert.equal(second.newSoundSet, false);
 	assert.equal(vault.patterns.length, first.newPatterns.length);
+});
+
+test('parses hits, multipliers, and accents from slot 1', async () => {
+	const { packets } = await decodeFixture();
+	const pattern = parsePattern(packets.find((p) => p.tag === TAG.pattern && p.payload[0] === 0).payload);
+	assert.equal(pattern.slot, 1);
+	assert.deepEqual(pattern.accents.flatMap((on, i) => (on ? [i + 1] : [])), [1, 10]);
+	assert.deepEqual(pattern.hits.filter((h) => h.sound === 1).map((h) => h.step + 1), [1, 4, 10, 13]);
+});
+
+test('renders an audible hit of every sound', async () => {
+	const { packets } = await decodeFixture();
+	const synth = await loadSynth(await readFile(wasmUrl));
+	const sounds = soundPatches(packets.filter((p) => p.tag === TAG.patch).map((p) => p.payload));
+	assert.equal(Object.keys(sounds).length, 16);
+	for (const { left, right } of Object.values(sounds)) {
+		const samples = synth.render(left, right, { sampleRate: 48000, morph: 0.5, seconds: 1 });
+		assert.ok(samples.reduce((peak, s) => Math.max(peak, Math.abs(s)), 0) > 0.01);
+	}
 });

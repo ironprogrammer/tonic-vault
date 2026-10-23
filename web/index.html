@@ -7,70 +7,64 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&display=swap">
 <link rel="stylesheet" href="style.css">
-<script type="module" src="app.js"></script>
+<script type="module" src="library.js"></script>
 </head>
 <body>
 <main>
 
-<header class="top">
+<header class="top split">
 	<div>
-		<h1>import</h1>
-		<p class="dim">tonic → vault · <span id="vault-count">0 patterns</span></p>
+		<h1>tonic vault</h1>
+		<p class="dim small">po-32 · <span id="vault-count">0 patterns</span></p>
 	</div>
+	<button id="download" class="outline icon-text"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"/></svg>save</button>
 </header>
 
-<section id="setup">
-	<h2>1 — connect</h2>
-	<label class="row">
-		<span class="dim">input</span>
-		<select id="input"><option value="">default input</option></select>
-	</label>
-	<p class="dim small">a cable from the tonic's line out needs a 4-pole (trrs) cable or adapter into a headset jack. check the tonic's volume first (hold bpm, press 1–16); it resets whenever a cable is plugged in.</p>
+<nav class="actions">
+	<a href="import.html" class="action">
+		<span class="big">import</span>
+		<span class="keys small-keys"><img src="icons/key-held.svg" alt="" width="40" height="40"><span>+</span><img src="icons/key-pressed.svg" alt="" width="40" height="40"></span>
+		<span class="dim small">tonic: transfer data<br>write + sound</span>
+	</a>
+	<span class="action disabled" aria-disabled="true">
+		<span class="big">export</span>
+		<span class="keys small-keys"><img src="icons/key-held.svg" alt="" width="40" height="40"><span>+</span><img src="icons/key-pressed.svg" alt="" width="40" height="40"></span>
+		<span class="dim small">tonic: receive data<br>acc + sound · soon</span>
+	</span>
+</nav>
 
-	<h2>2 — listen</h2>
-	<button id="listen" class="primary">start listening</button>
-
-	<h2>3 — transfer data</h2>
-	<div class="combo">
-		<div class="keys">
-			<span><img src="icons/key-held.svg" alt="" width="56" height="56">write</span>
-			<span class="plus">+</span>
-			<span><img src="icons/key-pressed.svg" alt="" width="56" height="56">sound</span>
-		</div>
-		<p class="dim small">then on the tonic: press write + sound</p>
-	</div>
-</section>
-
-<section id="receiving" class="panel" hidden>
+<section id="kit-section" hidden>
 	<div class="split">
-		<span class="big">receiving</span>
-		<span class="big" id="elapsed">0.0s</span>
+		<h2 id="kit-title">sounds</h2>
+		<span id="kit-seen" class="dim small nowrap"></span>
 	</div>
-	<div id="meter" class="meter" aria-hidden="true"></div>
-	<div id="stages" class="stages"></div>
-	<div class="split small">
-		<span id="status">waiting for the tonic…</span>
-	</div>
-	<div class="small" id="level"></div>
-	<button id="cancel" class="outline-dark">cancel</button>
-</section>
-
-<section id="results" hidden>
-	<h2>received</h2>
-	<div class="tiles">
-		<div class="tile on"><span id="new-count" class="num">0</span><span>new</span></div>
-		<div class="tile"><span id="known-count" class="num">0</span><span class="dim">already in vault</span></div>
-		<div class="tile"><span id="sounds-mark" class="num">=</span><span id="sounds-label" class="dim">sounds</span></div>
-	</div>
-	<p id="results-note" class="dim small"></p>
-	<div id="name-list"></div>
-	<button id="save" class="primary">save to vault</button>
-	<button id="again" class="link">import again</button>
+	<div id="kit" class="kit"></div>
+	<p class="dim small">tap to hear · columns are channels 1–4</p>
 </section>
 
 <section>
-	<button id="download" class="outline">download vault .json</button>
+	<div class="split center">
+		<h2>patterns</h2>
+		<div id="filters" class="chips"></div>
+	</div>
+	<div id="patterns" class="list"></div>
+	<p id="empty" class="dim small" hidden>no patterns yet. import from the tonic to start.</p>
 </section>
+
+<section id="sets-section" hidden>
+	<h2>sounds</h2>
+	<div id="sets" class="list"></div>
+</section>
+
+<section class="pair">
+	<label class="outline button-like">load .json<input id="load" type="file" accept="application/json,.json" hidden></label>
+	<button id="download-all" class="outline">save all .json</button>
+</section>
+
+<div id="selection" class="selection" hidden>
+	<span id="selection-label"></span>
+	<button id="delete-selected" class="square dark" aria-label="delete selected"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.5 6.5v5M9.5 6.5v5"/></svg></button>
+</div>
 
 </main>
 </body>

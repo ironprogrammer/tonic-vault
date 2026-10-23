@@ -1,0 +1,186 @@
+import { player, PLAY_ICON, STOP_ICON } from './audio.js';
+import { FACTORY_SOUNDS, fromBase64, parsePattern, playableSoundSet } from './pattern.js';
+import { emptyVault, isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
+
+const $ = (id) => document.getElementById(id);
+let vault = loadVault();
+let filter = 'all';
+let playingId = null;
+const selected = new Set();
+
+function el(tag, attrs = {}, ...children) {
+	const node = document.createElement(tag);
+	for (const [k, v] of Object.entries(attrs)) {
+		if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+		else if (k === 'html') node.innerHTML = v;
+		else node.setAttribute(k, v);
+	}
+	node.append(...children);
+	return node;
+}
+
+function setName(set) {
+	return set.name || `unnamed · ${shortDate(set.firstSeen)}`;
+}
+
+// The sounds last seen on the Tonic, as a 4×4 grid you can tap to hear.
+function renderKit() {
+	const set = vault.soundSets.find((s) => s.id === vault.tonic?.soundSetId);
+	$('kit-section').hidden = !set;
+	if (!set) return;
+	const playable = playableSoundSet(set);
+	$('kit-title').textContent = `sounds — ${setName(set)}`;
+	$('kit-seen').textContent = `last on tonic ${shortDate(vault.tonic.seen)}`;
+	$('kit').replaceChildren(...FACTORY_SOUNDS.map((name, i) => el('button', {
+		type: 'button',
+		onclick: () => player.audition(playable, i + 1),
+	}, el('span', { class: 'dim tiny' }, String(i + 1)), el('span', { class: 'ellipsis' }, name))));
+}
+
+function stepStrip(parsed) {
+	return el('div', { class: 'strip' }, ...Array.from({ length: 16 }, (_, step) => {
+		const hit = parsed.hits.some((h) => h.step === step);
+		return el('span', { class: hit ? (parsed.accents[step] ? 'accent' : 'hit') : '' });
+	}));
+}
+
+function renderFilters() {
+	const newCount = vault.patterns.filter((p) => isNew(vault, p)).length;
+	const tags = [...new Set(vault.patterns.flatMap((p) => p.tags))].sort();
+	const chips = [['all', 'all'], ...(newCount ? [['new', `new ${newCount}`]] : []), ...tags.map((t) => [`#${t}`, t])];
+	if (!chips.some(([key]) => key === filter)) filter = 'all';
+	$('filters').replaceChildren(...chips.map(([key, label]) => el('button', {
+		type: 'button',
+		class: `chip${key === filter ? ' on' : ''}`,
+		onclick: () => { filter = key; render(); },
+	}, label)));
+}
+
+function visiblePatterns() {
+	const list = vault.patterns.filter((p) =>
+		filter === 'all' || (filter === 'new' ? isNew(vault, p) : p.tags.includes(filter.slice(1))));
+	return list.sort((a, b) => b.lastSeen.localeCompare(a.lastSeen) || a.slot - b.slot);
+}
+
+// The list re-renders while a pattern plays, so the playing pattern is tracked by id rather than by button.
+function playButton(pattern, parsed) {
+	const set = playableSoundSet(vault.soundSets.find((s) => s.id === pattern.soundSetId));
+	const on = playingId === pattern.id;
+	const button = el('button', { type: 'button', class: `round${on ? ' playing' : ''}`, 'aria-label': `${on ? 'stop' : 'play'} ${patternName(pattern)}`, html: on ? STOP_ICON : PLAY_ICON });
+	button.disabled = !set;
+	button.addEventListener('click', () => {
+		if (on) return player.stop();
+		player.play(parsed, set, pattern, (step) => {
+			if (step !== null) return;
+			playingId = null;
+			renderPatterns();
+		});
+		playingId = pattern.id;
+		renderPatterns();
+	});
+	return button;
+}
+
+function renderPatterns() {
+	const rows = visiblePatterns().map((p) => {
+		const parsed = parsePattern(fromBase64(p.raw));
+		const meta = [`slot ${p.slot}`, shortDate(p.firstSeen), ...p.tags].join(' · ');
+		const box = el('input', { type: 'checkbox', 'aria-label': `select ${patternName(p)}` });
+		box.checked = selected.has(p.id);
+		box.addEventListener('change', () => {
+			box.checked ? selected.add(p.id) : selected.delete(p.id);
+			render();
+		});
+		return el('div', { class: `pattern-row${selected.has(p.id) ? ' selected' : ''}` },
+			el('label', { class: 'check' }, box),
+			el('a', { href: `pattern.html?id=${p.id}`, class: 'pattern-link' },
+				el('span', { class: 'split' }, el('span', { class: 'name ellipsis' }, patternName(p)), el('span', { class: 'dim small' }, `${p.bpm} · sw ${500 + p.swing}`)),
+				stepStrip(parsed),
+				el('span', { class: 'meta dim small' }, meta, ...(isNew(vault, p) ? [el('span', { class: 'badge' }, 'new')] : []))),
+			playButton(p, parsed));
+	});
+	$('patterns').replaceChildren(...rows);
+	$('empty').hidden = vault.patterns.length > 0;
+}
+
+function renderSets() {
+	$('sets-section').hidden = !vault.soundSets.length;
+	$('sets').replaceChildren(...vault.soundSets.map((set) => {
+		const used = vault.patterns.filter((p) => p.soundSetId === set.id).length;
+		const name = el('input', { type: 'text', class: 'inline-name', placeholder: setName(set), 'aria-label': 'sound set name' });
+		name.value = set.name;
+		name.addEventListener('change', () => { set.name = name.value.trim(); save(); });
+		const onTonic = set.id === vault.tonic?.soundSetId;
+		return el('div', { class: 'set-row' },
+			el('div', { class: 'grow' }, name, el('span', { class: 'dim small' }, `${set.sounds.length / 2} sounds · ${used} pattern${used === 1 ? '' : 's'} · ${shortDate(set.lastSeen)}`)),
+			onTonic
+				? el('span', { class: 'badge' }, 'last on tonic')
+				: el('button', {
+					type: 'button',
+					class: 'square',
+					'aria-label': `delete sounds ${setName(set)}`,
+					html: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.5 6.5v5M9.5 6.5v5"/></svg>',
+					onclick: () => {
+						if (!confirm(`delete sounds ${setName(set)}?${used ? ` ${used} pattern${used === 1 ? '' : 's'} use them and won't play.` : ''}`)) return;
+						vault.soundSets = vault.soundSets.filter((s) => s !== set);
+						save();
+					},
+				}));
+	}));
+}
+
+function renderSelection() {
+	$('selection').hidden = !selected.size;
+	$('selection-label').textContent = `${selected.size} selected`;
+}
+
+function render() {
+	const n = vault.patterns.length;
+	$('vault-count').textContent = `${n} pattern${n === 1 ? '' : 's'}`;
+	renderKit();
+	renderFilters();
+	renderPatterns();
+	renderSets();
+	renderSelection();
+}
+
+function save() {
+	saveVault(vault);
+	render();
+}
+
+function downloadVault() {
+	const blob = new Blob([JSON.stringify(vault, null, '\t')], { type: 'application/json' });
+	const a = el('a', { href: URL.createObjectURL(blob), download: `tonic-vault-${new Date().toISOString().slice(0, 10)}.json` });
+	a.click();
+	URL.revokeObjectURL(a.href);
+}
+
+// Replaces the vault with a saved .json, after a confirm, since the current one is lost unless saved first.
+async function loadFile(file) {
+	try {
+		const loaded = { ...emptyVault(), ...JSON.parse(await file.text()) };
+		if (!Array.isArray(loaded.patterns) || !Array.isArray(loaded.soundSets)) throw new Error('not a vault file');
+		if (!confirm(`replace this vault (${vault.patterns.length} patterns) with ${file.name} (${loaded.patterns.length} patterns)?`)) return;
+		vault = loaded;
+		selected.clear();
+		save();
+	} catch (err) {
+		alert(`couldn't load ${file.name}: ${err.message}`);
+	}
+}
+
+$('download').addEventListener('click', downloadVault);
+$('download-all').addEventListener('click', downloadVault);
+$('load').addEventListener('change', (e) => {
+	if (e.target.files[0]) loadFile(e.target.files[0]);
+	e.target.value = '';
+});
+$('delete-selected').addEventListener('click', () => {
+	if (!confirm(`delete ${selected.size} pattern${selected.size === 1 ? '' : 's'}?`)) return;
+	player.stop();
+	vault.patterns = vault.patterns.filter((p) => !selected.has(p.id));
+	selected.clear();
+	save();
+});
+render();

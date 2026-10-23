@@ -104,3 +104,19 @@ export async function importTransfer(vault, packets, now = new Date().toISOStrin
 	}
 	return result;
 }
+
+export function patternName(pattern) {
+	return pattern.name || `untitled · slot ${pattern.slot}`;
+}
+
+// Dates show the way the mock does, month.day, in local time.
+export function shortDate(iso) {
+	if (!iso) return '';
+	const d = new Date(iso);
+	return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// The patterns from the most recent import are the new ones.
+export function isNew(vault, pattern) {
+	return pattern.firstSeen === vault.tonic?.seen;
+}

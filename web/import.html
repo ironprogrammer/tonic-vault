@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tonic vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="import.js"></script>
+</head>
+<body>
+<main>
+
+<header class="top">
+	<a href="./" class="square" aria-label="back to library"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></a>
+	<div>
+		<h1>import</h1>
+		<p class="dim">tonic → vault · <span id="vault-count">0 patterns</span></p>
+	</div>
+</header>
+
+<section id="setup">
+	<h2>1 — connect</h2>
+	<label class="row">
+		<span class="dim">input</span>
+		<select id="input"><option value="">default input</option></select>
+	</label>
+	<p class="dim small">a cable from the tonic's line out needs a 4-pole (trrs) cable or adapter into a headset jack. check the tonic's volume first (hold bpm, press 1–16); it resets whenever a cable is plugged in.</p>
+
+	<h2>2 — listen</h2>
+	<button id="listen" class="primary">start listening</button>
+
+	<h2>3 — transfer data</h2>
+	<div class="combo">
+		<div class="keys">
+			<span><img src="icons/key-held.svg" alt="" width="56" height="56">write</span>
+			<span class="plus">+</span>
+			<span><img src="icons/key-pressed.svg" alt="" width="56" height="56">sound</span>
+		</div>
+		<p class="dim small">then on the tonic: press write + sound</p>
+	</div>
+</section>
+
+<section id="receiving" class="panel" hidden>
+	<div class="split">
+		<span class="big">receiving</span>
+		<span class="big" id="elapsed">0.0s</span>
+	</div>
+	<div id="meter" class="meter" aria-hidden="true"></div>
+	<div id="stages" class="stages"></div>
+	<div class="split small">
+		<span id="status">waiting for the tonic…</span>
+	</div>
+	<div class="small" id="level"></div>
+	<button id="cancel" class="outline-dark">cancel</button>
+</section>
+
+<section id="results" hidden>
+	<h2>received</h2>
+	<div class="tiles">
+		<div class="tile on"><span id="new-count" class="num">0</span><span>new</span></div>
+		<div class="tile"><span id="known-count" class="num">0</span><span class="dim">already in vault</span></div>
+		<div class="tile"><span id="sounds-mark" class="num">=</span><span id="sounds-label" class="dim">sounds</span></div>
+	</div>
+	<p id="results-note" class="dim small"></p>
+	<div id="name-list"></div>
+	<button id="save" class="primary">save to vault</button>
+	<button id="again" class="link">import again</button>
+</section>
+
+
+</main>
+</body>
+</html>
