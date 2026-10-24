@@ -5,7 +5,9 @@ import { addToExport, emptyVault, isNew, loadVault, patternName, saveVault, shor
 const $ = (id) => document.getElementById(id);
 let vault = loadVault();
 const FILTER_KEY = 'tonic-vault-filter';
+const SEARCH_KEY = 'tonic-vault-search';
 let filter = readFilter();
+let search = readStored(SEARCH_KEY);
 let hearSetId = null;
 let playingId = null;
 const selected = new Set();
@@ -30,18 +32,28 @@ function readFilter() {
 	}
 }
 
+function readStored(key) {
+	try {
+		return localStorage.getItem(key) || '';
+	} catch {
+		return '';
+	}
+}
+
+function setSearch(text) {
+	search = text;
+	try {
+		localStorage.setItem(SEARCH_KEY, text);
+	} catch {}
+	renderPatterns();
+}
+
 function setFilter(key) {
 	filter = key;
 	try {
 		localStorage.setItem(FILTER_KEY, key);
 	} catch {}
-	// Browser back can restore this page from memory, so re-read the vault in case another page changed it.
-addEventListener('pageshow', (e) => {
-	if (!e.persisted) return;
-	vault = loadVault();
 	render();
-});
-render();
 }
 
 function setName(set) {
@@ -89,8 +101,10 @@ function renderFilters() {
 }
 
 function visiblePatterns() {
+	const words = search.toLowerCase().split(/\s+/).filter(Boolean);
 	const list = vault.patterns.filter((p) =>
-		filter === 'all' || (filter === 'new' ? isNew(vault, p) : p.tags.includes(filter.slice(1))));
+		(filter === 'all' || (filter === 'new' ? isNew(vault, p) : p.tags.includes(filter.slice(1))))
+		&& words.every((w) => patternName(p, vault).toLowerCase().includes(w)));
 	return list.sort((a, b) => b.lastSeen.localeCompare(a.lastSeen) || a.slot - b.slot);
 }
 
@@ -121,13 +135,7 @@ function renderPatterns() {
 		box.checked = selected.has(p.id);
 		box.addEventListener('change', () => {
 			box.checked ? selected.add(p.id) : selected.delete(p.id);
-			// Browser back can restore this page from memory, so re-read the vault in case another page changed it.
-addEventListener('pageshow', (e) => {
-	if (!e.persisted) return;
-	vault = loadVault();
-	render();
-});
-render();
+			render();
 		});
 		return el('div', { class: `pattern-row${selected.has(p.id) ? ' selected' : ''}` },
 			el('label', { class: 'check' }, box),
@@ -139,6 +147,7 @@ render();
 	});
 	$('patterns').replaceChildren(...rows);
 	$('empty').hidden = vault.patterns.length > 0;
+	$('no-match').hidden = !vault.patterns.length || rows.length > 0;
 }
 
 function renderSets() {
@@ -191,13 +200,7 @@ function render() {
 
 function save() {
 	saveVault(vault);
-	// Browser back can restore this page from memory, so re-read the vault in case another page changed it.
-addEventListener('pageshow', (e) => {
-	if (!e.persisted) return;
-	vault = loadVault();
 	render();
-});
-render();
 }
 
 function downloadVault() {
@@ -222,6 +225,8 @@ async function loadFile(file) {
 	}
 }
 
+$('search').value = search;
+$('search').addEventListener('input', (e) => setSearch(e.target.value));
 $('download').addEventListener('click', downloadVault);
 $('load').addEventListener('change', (e) => {
 	if (e.target.files[0]) loadFile(e.target.files[0]);

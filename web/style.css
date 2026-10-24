@@ -115,6 +115,9 @@ main > p:empty { display: none; }
 .chip.add { width: 90px; border-style: dashed; font-family: inherit; font-weight: 400; font-size: 13px; }
 .chip.add::placeholder { color: var(--cream); }
 
+.search { width: 100%; height: 40px; margin-bottom: 8px; padding: 0; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--cream); font: inherit; font-weight: 300; font-size: 17px; }
+.search::placeholder { color: var(--dim); }
+.search:focus { outline: none; border-bottom-color: var(--cream); }
 .list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
 .pattern-row { display: flex; align-items: center; gap: 8px; padding: 10px 2px; border-bottom: 1px solid var(--faint); }
 .pattern-row.selected { background: rgba(239, 235, 225, 0.1); }
