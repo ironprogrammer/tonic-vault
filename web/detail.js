@@ -74,7 +74,24 @@ function renderTags() {
 			renderTags();
 		});
 		return chip;
-	}), input);
+	}), input, ...unusedTags().map((tag) => {
+		const chip = document.createElement('button');
+		chip.type = 'button';
+		chip.className = 'chip suggest';
+		chip.setAttribute('aria-label', `add tag ${tag}`);
+		chip.textContent = `+ ${tag}`;
+		chip.addEventListener('click', () => {
+			pattern.tags.push(tag);
+			save();
+			renderTags();
+		});
+		return chip;
+	}));
+}
+
+// Tags already used on other patterns, offered so a tap adds one without retyping it.
+function unusedTags() {
+	return [...new Set(vault.patterns.flatMap((p) => p.tags))].filter((t) => !pattern.tags.includes(t)).sort();
 }
 
 function setPlayIcon(playing) {
