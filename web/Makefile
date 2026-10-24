@@ -1,8 +1,8 @@
 # Builds libpo32 plus the glue in po32_wasm.c into a standalone po32.wasm (no Emscripten, no JS glue).
-# Needs Homebrew's llvm and lld, since Apple's clang has no WebAssembly target.
+# Needs Homebrew's llvm and lld by default, since Apple's clang has no WebAssembly target. Override CLANG and WASM_LD elsewhere.
 
-CLANG := /opt/homebrew/opt/llvm/bin/clang
-WASM_LD := /opt/homebrew/opt/lld/bin/wasm-ld
+CLANG ?= /opt/homebrew/opt/llvm/bin/clang
+WASM_LD ?= /opt/homebrew/opt/lld/bin/wasm-ld
 LIB := ../vendor/libpo32/core
 SRC := $(wildcard $(LIB)/src/*.c)
 

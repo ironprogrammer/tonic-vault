@@ -97,7 +97,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON. Working: a full Tonic transfer imported in Chrome on 10.22 (`web/`, served at https://tonic-vault.test).
 2. **Library and playback.** The screens from the mock, with playback through the WASM synth. Installable as a PWA so it works on a phone.
    - Working: the library (`index.html`) and pattern detail (`pattern.html`), with sounds you can audition and patterns that loop through libpo32's synth. Morph, accents, multipliers, and the four channels cutting off their own hits all play. Pitch locks, effects, and add to export don't yet. Swing's timing curve is a guess.
-   - Still to do: PWA install, measuring the Tonic's swing timing from a line-out recording, and checking playback against the Tonic by ear (slot 2 has a new pattern from 10.23 to compare after the next import).
+   - Still to do: measuring the Tonic's swing timing from a line-out recording, and checking playback against the Tonic by ear (slot 2 has a new pattern from 10.23 to compare after the next import).
 3. **Export.** Compose the patterns to send, render the transfer audio, play it into the Tonic, and download it as a WAV.
    - Built (`export.html`): the slot grid, sounds and tempo/swing/chain options, send with progress and stop, and the backup .wav. "Add to export" in the library and pattern detail puts patterns in their last slot, or queues them for the export screen to place when that slot is taken. A test renders an export and decodes it back to the same packets.
    - Worked on the Tonic on 10.24: three patterns sent over the cable to its line in. Not built: editing the chain (it's the sent slots in order).
@@ -112,6 +112,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 - `phase0/build/frame <tag-hex>:<payload.bin> ...` builds a transfer from raw packet payloads (such as the `payload.bin` files `po32_decode_capture` writes) and prints 48 kHz f32 audio. Pipe it through `sox -t f32 -r 48000 -c 1 - -b 16 out.wav gain -3`, then `play out.wav` with the Tonic in receive mode.
 - The pinned libpo32 commit is only on the PR, so a fresh clone needs `git -C vendor/libpo32 fetch origin pull/20/head` before `git submodule update`.
 - `make -C web` builds `po32.wasm` (decoder, synth, and encoder), and `make -C web test` runs the node tests against the fixture below. The app is static files in `web/`: `index.html` (library), `import.html`, `export.html`, and `pattern.html`.
+- Pushes to `main` run `.github/workflows/pages.yml`, which builds and tests `po32.wasm` with Ubuntu's clang and lld (`CLANG` and `WASM_LD` override the Homebrew paths) and deploys `web/` to https://ironprogrammer.com/tonic-vault/. `web/sw.js` serves from the network first and falls back to its cache offline.
 - `tests/fixtures/tonic-backup-2026-10-22.wav` is a real Tonic backup (cable, 48 kHz mono, 49 packets) so decode work doesn't need a fresh transfer each time. New captures land in the gitignored `phase0/captures/`.
 
 ## Connecting the Tonic

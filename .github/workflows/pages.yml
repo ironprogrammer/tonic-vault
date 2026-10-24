@@ -1,0 +1,54 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The pinned commit lives on libpo32's PR #20, which a plain submodule update can't reach.
+      - name: Fetch libpo32 at the pinned commit
+        run: |
+          sha=$(git rev-parse HEAD:vendor/libpo32)
+          git clone --quiet https://github.com/ericlewis/libpo32 vendor/libpo32
+          git -C vendor/libpo32 fetch --quiet origin pull/20/head
+          git -C vendor/libpo32 checkout --quiet "$sha"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install clang and lld
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq clang lld
+
+      - name: Build and test
+        run: make -C web test CLANG=clang WASM_LD="$(command -v wasm-ld)"
+
+      - name: Collect the site
+        run: rsync -a --exclude Makefile --exclude '*.c' --exclude test web/ _site/
+
+      - uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
