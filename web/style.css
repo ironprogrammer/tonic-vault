@@ -72,6 +72,7 @@ button { height: 52px; cursor: pointer; }
 .name-row .slot { width: 42px; flex-shrink: 0; display: flex; flex-direction: column; line-height: 1; }
 .name-row .slot b { font-size: 24px; font-weight: 300; }
 .name-row input { flex: 1; min-width: 0; height: 44px; padding: 0; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--cream); font-weight: 300; font-size: 19px; }
+.name-row input::placeholder { color: var(--dim); }
 #name-list { border-top: 1px solid var(--line); }
 
 a { color: var(--cream); }
@@ -182,13 +183,13 @@ main > p:empty { display: none; }
 .center-text { text-align: center; }
 .center-content { justify-content: center; }
 .slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-.slot { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; height: auto; min-height: 66px; padding: 6px 7px; border: none; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: transparent; color: rgba(239, 235, 225, 0.5); text-align: left; font-weight: 300; min-width: 0; }
-.slot .n { font-size: 18px; line-height: 1; margin-bottom: auto; }
-.slot .name { font-size: 12px; font-weight: 400; line-height: 1.2; max-width: 100%; overflow-wrap: anywhere; }
-.slot .was { font-size: 10px; line-height: 1.2; opacity: 0.8; max-width: 100%; overflow-wrap: anywhere; }
-.slot.filled { background: var(--cream); color: var(--ground); }
-.slot.picking { outline: 2px solid var(--cream); outline-offset: -4px; }
-.slot.filled.picking { outline-color: var(--ground); }
+.slots .slot { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; height: auto; min-height: 66px; padding: 6px 7px; border: none; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: transparent; color: rgba(239, 235, 225, 0.5); text-align: left; font-weight: 300; min-width: 0; }
+.slots .slot .n { font-size: 18px; line-height: 1; margin-bottom: auto; }
+.slots .slot .name { font-size: 12px; font-weight: 400; line-height: 1.2; max-width: 100%; overflow-wrap: anywhere; }
+.slots .slot .was { font-size: 10px; line-height: 1.2; opacity: 0.8; max-width: 100%; overflow-wrap: anywhere; }
+.slots .slot.filled { background: var(--cream); color: var(--ground); }
+.slots .slot.picking { outline: 2px solid var(--cream); outline-offset: -4px; }
+.slots .slot.filled.picking { outline-color: var(--ground); }
 .pending { display: flex; align-items: center; gap: 8px; padding: 0 0 0 12px; background: var(--cream); color: var(--ground); font-size: 14px; font-weight: 400; }
 .pending span { flex: 1; padding: 10px 0; }
 .pending .link { color: var(--ground); }
