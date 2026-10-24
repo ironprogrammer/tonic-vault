@@ -100,10 +100,11 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Still to do: PWA install, measuring the Tonic's swing timing from a line-out recording, and checking playback against the Tonic by ear (slot 2 has a new pattern from 10.23 to compare after the next import).
 3. **Export.** Compose the patterns to send, render the transfer audio, play it into the Tonic, and download it as a WAV.
    - Built (`export.html`): the slot grid, sounds and tempo/swing/chain options, send with progress and stop, and the backup .wav. "Add to export" in the library and pattern detail puts patterns in their last slot, or queues them for the export screen to place when that slot is taken. A test renders an export and decodes it back to the same packets.
-   - Not yet tried on the Tonic. Not built: editing the chain (it's the sent slots in order).
+   - Worked on the Tonic on 10.24: three patterns sent over the cable to its line in. Not built: editing the chain (it's the sent slots in order).
    - Sending the state packet also sets the Tonic's knob positions. They come from the sound set's last state packet, which the vault only stores from imports made after 10.23; without one, libpo32's defaults are sent.
-4. **MIDI.** Map slots to drum notes (GM by default, editable), accents to velocity, and parameter locks to CC.
-5. **Later.** Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
+4. **MIDI.** Export a pattern as a .mid file to drop into a DAW. Map sounds to drum notes (GM by default, editable), accents to velocity, multipliers to repeated hits, and parameter locks to CC. Next after hosting, ahead of everything in Later unless an item there is needed for an accurate file.
+5. **Later.** Editing the chain on export, decoding the effect bytes, naming a sound pack's sounds, and playing pitch locks in the browser.
+6. **Someday.** Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
 
 ## Development
 
