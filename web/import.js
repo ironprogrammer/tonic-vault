@@ -1,4 +1,6 @@
 import { loadDecoder, TAG } from './po32.js';
+import { player, PLAY_ICON, STOP_ICON } from './audio.js';
+import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
 import { importTransfer, loadVault, patternName, saveVault } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
@@ -193,15 +195,45 @@ async function finish(packets, { done = true, ...options } = {}) {
 	if (result.movedPatterns.length) notes.push(`${result.movedPatterns.length} known pattern${result.movedPatterns.length === 1 ? '' : 's'} changed slots.`);
 	$('results-note').textContent = notes.join(' ');
 
+	const skipped = new Set();
+	const renderSave = () => {
+		const n = result.newPatterns.length - skipped.size;
+		$('save').textContent = n ? `import ${n}` : 'save';
+	};
 	$('name-list').replaceChildren(...result.newPatterns.map((p) => {
-		const row = document.createElement('label');
+		const parsed = parsePattern(fromBase64(p.raw));
+		const set = playableSoundSet(draft.soundSets.find((s) => s.id === p.soundSetId));
+		const row = document.createElement('div');
 		row.className = 'name-row';
-		row.innerHTML = `<span class="slot"><span class="dim small">slot</span><b>${p.slot}</b></span><input type="text" placeholder="${patternName(p, draft)}" aria-label="name for slot ${p.slot}">`;
-		row.querySelector('input').addEventListener('input', (e) => { p.name = e.target.value.trim(); });
+		row.innerHTML = `<label class="check"><input type="checkbox" checked aria-label="import slot ${p.slot}"></label><span class="slot"><span class="dim small">slot</span><b>${p.slot}</b></span><input type="text" placeholder="${patternName(p, draft)}" aria-label="name for slot ${p.slot}"><button type="button" class="round" aria-label="play slot ${p.slot}">${PLAY_ICON}</button>`;
+		const [box, name] = row.querySelectorAll('input');
+		box.addEventListener('change', () => {
+			box.checked ? skipped.delete(p.id) : skipped.add(p.id);
+			row.classList.toggle('skipped', !box.checked);
+			renderSave();
+		});
+		name.addEventListener('input', (e) => { p.name = e.target.value.trim(); });
+		const play = row.querySelector('button');
+		play.disabled = !set;
+		play.addEventListener('click', () => {
+			const on = play.classList.contains('playing');
+			player.stop();
+			if (on) return;
+			player.play(parsed, set, p, (step) => {
+				if (step !== null) return;
+				play.classList.remove('playing');
+				play.innerHTML = PLAY_ICON;
+			});
+			play.classList.add('playing');
+			play.innerHTML = STOP_ICON;
+		});
 		return row;
 	}));
-	$('save').textContent = result.newPatterns.length ? `save ${result.newPatterns.length} to vault` : 'save';
+	renderSave();
 	$('save').onclick = () => {
+		player.stop();
+		draft.patterns = draft.patterns.filter((p) => !skipped.has(p.id));
+		if (draft.tonic) draft.tonic.slots = draft.tonic.slots.map((id) => (skipped.has(id) ? null : id));
 		saveVault(draft);
 		location.href = './';
 	};
@@ -255,6 +287,10 @@ $('input').addEventListener('change', (e) => {
 });
 $('listen').addEventListener('click', listen);
 $('cancel').addEventListener('click', stopListening);
-$('again').addEventListener('click', () => { $('results').hidden = true; listen(); });
+$('again').addEventListener('click', () => {
+	player.stop();
+	$('results').hidden = true;
+	listen();
+});
 showVaultCount();
 listInputs();
