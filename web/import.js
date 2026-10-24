@@ -51,7 +51,8 @@ async function startCapture(onSamples) {
 			channelCount: 1,
 		},
 	});
-	const ctx = new AudioContext();
+	// No output device: opening the headset jack's output on a Mac loads the Tonic's signal on the same cable, about 34 dB down.
+	const ctx = new AudioContext({ sinkId: { type: 'none' } });
 	await ctx.audioWorklet.addModule('capture-worklet.js');
 	const node = new AudioWorkletNode(ctx, 'capture');
 	node.port.onmessage = (e) => onSamples(e.data);
