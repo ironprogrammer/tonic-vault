@@ -50,8 +50,3 @@ export function patternMidi(parsed, { name, bpm, swing }) {
 		...[0x4d, 0x54, 0x72, 0x6b], ...u32(track.length), ...track,
 	]);
 }
-
-// The MIDI as a file named after the pattern, minus characters file systems reject.
-export function midiFile(parsed, options) {
-	return new File([patternMidi(parsed, options)], `${options.name.replace(/[\\/:*?"<>|]/g, '-')}.mid`, { type: 'audio/midi' });
-}

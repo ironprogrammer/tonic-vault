@@ -1,7 +1,8 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
-import { midiFile } from './midi.js';
+import { patternMidi } from './midi.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
 import { addToExport, isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
+import { toWav } from './wav.js';
 
 const $ = (id) => document.getElementById(id);
 const vault = loadVault();
@@ -99,6 +100,11 @@ function unusedTags() {
 const SHARES = matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [new File([], 'x.mid', { type: 'audio/midi' })] });
 const SHARE_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 10V2M5 4.5 8 2l3 2.5M5.5 7H3.5v6.5h9V7h-2"/></svg>';
 
+// A file named after the pattern, minus characters file systems reject.
+function patternFile(data, ext, type) {
+	return new File([data], `${patternName(pattern, vault).replace(/[\\/:*?"<>|]/g, '-')}.${ext}`, { type });
+}
+
 function sendFile(file) {
 	if (SHARES) return navigator.share({ files: [file] }).catch(() => {});
 	const a = document.createElement('a');
@@ -139,11 +145,13 @@ if (!pattern) {
 		pattern.bpm = Math.min(240, Math.max(60, Number($('bpm').value) || pattern.bpm));
 		$('bpm').value = pattern.bpm;
 		save();
+		renderWav();
 	});
 	$('swing').addEventListener('change', () => {
 		pattern.swing = Math.min(18, Math.max(0, Math.round(Number($('swing').value)) || 0));
 		$('swing').value = pattern.swing;
 		save();
+		renderWav();
 	});
 
 	renderGrid(parsed, set);
@@ -160,12 +168,23 @@ if (!pattern) {
 		setPlayIcon(true);
 	});
 	if (SHARES) {
-		$('midi').innerHTML = `${SHARE_ICON}.mid`;
-		$('midi').setAttribute('aria-label', 'share .mid');
+		for (const id of ['midi', 'wav']) {
+			$(id).innerHTML = `${SHARE_ICON}.${id === 'midi' ? 'mid' : 'wav'}`;
+			$(id).setAttribute('aria-label', `share .${id === 'midi' ? 'mid' : 'wav'}`);
+		}
 	}
 	$('midi').addEventListener('click', () => {
-		const name = patternName(pattern, vault);
-		sendFile(midiFile(parsed, { name, bpm: pattern.bpm, swing: pattern.swing }));
+		sendFile(patternFile(patternMidi(parsed, { name: patternName(pattern, vault), bpm: pattern.bpm, swing: pattern.swing }), 'mid', 'audio/midi'));
+	});
+	// Four bars, rendered ahead because iOS only shares in response to a tap, and a render takes too long after one.
+	let wavSamples = null;
+	const renderWav = () => {
+		wavSamples = playable && player.render(parsed, playable, pattern);
+	};
+	renderWav();
+	$('wav').disabled = !playable;
+	$('wav').addEventListener('click', async () => {
+		sendFile(patternFile(toWav(await wavSamples, 48000), 'wav', 'audio/wav'));
 	});
 	// Its last slot if that's free in the export; otherwise the export screen asks for one.
 	$('add-export').addEventListener('click', () => {

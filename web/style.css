@@ -98,6 +98,7 @@ main > p:empty { display: none; }
 .button-like { display: flex; align-items: center; justify-content: center; font-weight: 400; font-size: 15px; cursor: pointer; }
 .pair { flex-direction: row; }
 .pair > * { flex: 1; }
+.pair > .icon-text { justify-content: center; }
 
 .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .action { display: flex; flex-direction: column; gap: 12px; padding: 14px 12px 12px; border: 1px solid var(--line); text-decoration: none; }

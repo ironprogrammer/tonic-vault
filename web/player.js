@@ -5,6 +5,21 @@ import { barHits, swingDelay } from './pattern.js';
 const LOOKAHEAD = 0.12;
 const HIT_SECONDS = 2.5;
 
+// Each of the Tonic's four channels plays one sound at a time, so a new hit cuts off the last one on its channel.
+function startOn(ctx, destination, voices, buffer, channel, when) {
+	const prev = voices[channel];
+	if (prev) {
+		prev.gain.gain.setTargetAtTime(0, when, 0.004);
+		prev.source.stop(when + 0.03);
+	}
+	const source = ctx.createBufferSource();
+	const gain = ctx.createGain();
+	source.buffer = buffer;
+	source.connect(gain).connect(destination);
+	source.start(when);
+	voices[channel] = { source, gain };
+}
+
 export function createPlayer(synth) {
 	let ctx = null;
 	let master = null;
@@ -28,14 +43,14 @@ export function createPlayer(synth) {
 		return ctx;
 	}
 
-	function hitBuffer(soundSet, sound, morph, accent) {
-		const key = `${soundSet.id}:${sound}:${morph}:${accent}`;
+	function hitBuffer(soundSet, sound, morph, accent, sampleRate = ctx.sampleRate) {
+		const key = `${soundSet.id}:${sound}:${morph}:${accent}:${sampleRate}`;
 		if (!cache.has(key)) {
 			const { left, right } = soundSet.patches[sound];
-			const samples = synth.render(left, right, { sampleRate: ctx.sampleRate, morph: morph / 255, velocity: accent ? 127 : 100, seconds: HIT_SECONDS });
+			const samples = synth.render(left, right, { sampleRate, morph: morph / 255, velocity: accent ? 127 : 100, seconds: HIT_SECONDS });
 			let end = samples.length;
 			while (end > 1 && Math.abs(samples[end - 1]) < 1e-4) end--;
-			const buffer = ctx.createBuffer(1, end, ctx.sampleRate);
+			const buffer = new AudioBuffer({ length: end, sampleRate });
 			buffer.copyToChannel(samples.subarray(0, end), 0);
 			cache.set(key, buffer);
 		}
@@ -52,19 +67,8 @@ export function createPlayer(synth) {
 		}, seconds * 1000);
 	}
 
-	// Each of the Tonic's four channels plays one sound at a time, so a new hit cuts off the last one on its channel.
 	function start(buffer, channel, when) {
-		const prev = voices[channel];
-		if (prev) {
-			prev.gain.gain.setTargetAtTime(0, when, 0.004);
-			prev.source.stop(when + 0.03);
-		}
-		const source = ctx.createBufferSource();
-		const gain = ctx.createGain();
-		source.buffer = buffer;
-		source.connect(gain).connect(master);
-		source.start(when);
-		voices[channel] = { source, gain };
+		startOn(ctx, master, voices, buffer, channel, when);
 	}
 
 	function stop() {
@@ -132,6 +136,31 @@ export function createPlayer(synth) {
 			timer = setInterval(schedule, 25);
 			frame = requestAnimationFrame(draw);
 			onStop = () => onStep(null);
+		},
+
+		/*
+		 * Renders bars of a parsed pattern offline: mono samples at sampleRate, peaking at 0.9, with the last hits rung out.
+		 * Repeats that wrap past a bar play at the start of the next one, as they do when the pattern loops.
+		 */
+		async render(pattern, soundSet, timing, bars = 4, sampleRate = 48000) {
+			const length = 60 / timing.bpm / 4;
+			const hits = pattern.hits.filter((h) => soundSet.patches[h.sound]?.right);
+			const events = [];
+			for (let bar = 0; bar < bars; bar++) {
+				for (const e of barHits(hits, timing.swing)) events.push({ ...e, at: ((bar + (e.wrapped ? 1 : 0)) * 16 + e.time) * length });
+			}
+			events.sort((a, b) => a.at - b.at);
+			const loop = Math.round(bars * 16 * length * sampleRate);
+			const offline = new OfflineAudioContext(1, loop + HIT_SECONDS * sampleRate, sampleRate);
+			const voices = [];
+			for (const e of events) {
+				startOn(offline, offline.destination, voices, hitBuffer(soundSet, e.hit.sound, e.hit.morph, e.hit.accent, sampleRate), e.hit.lane, e.at);
+			}
+			const samples = (await offline.startRendering()).getChannelData(0);
+			let end = samples.length;
+			while (end > loop && Math.abs(samples[end - 1]) < 1e-4) end--;
+			const peak = samples.reduce((m, s) => Math.max(m, Math.abs(s)), 0) || 1;
+			return samples.subarray(0, end).map((s) => (s * 0.9) / peak);
 		},
 	};
 }

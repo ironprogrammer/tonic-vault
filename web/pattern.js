@@ -38,7 +38,7 @@ export function swingDelay(step, swing) {
 /*
  * When each hit and multiplier repeat sounds in a looping bar, in steps from 0 to 16, as measured on the Tonic.
  * Repeats are a straight step / multiplier apart from the swung hit, and stop when the next hit on the same channel
- * starts, wrapping into the next bar if they run past it. end is when the note should stop, for MIDI.
+ * starts, wrapping into the next bar if they run past it (marked wrapped). end is when the note should stop, for MIDI.
  */
 export function barHits(hits, swing) {
 	const at = (h) => h.step + swingDelay(h.step, swing);
@@ -51,11 +51,12 @@ export function barHits(hits, swing) {
 			let time = start + k / h.multiplier;
 			if (k && time >= next) break;
 			let end = Math.min(time + 0.5 / h.multiplier, next);
-			if (time >= 16) {
+			const wrapped = time >= 16;
+			if (wrapped) {
 				time -= 16;
 				end -= 16;
 			} else end = Math.min(end, 16);
-			out.push({ hit: h, time, end });
+			out.push({ hit: h, time, end, wrapped });
 		}
 	}
 	return out.sort((a, b) => a.time - b.time);

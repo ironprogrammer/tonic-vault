@@ -11,7 +11,7 @@ let waiting = '';
 let connection = 'cable';
 const GIVE_UP_SECONDS = 30;
 const GIVE_UP = {
-	cable: 'nothing came through. check the cable is in the tonic\'s line out, the input above, and that the tonic\'s volume is 16, then listen again.',
+	cable: 'nothing came through. check the cable, the input above, and tonic volume 16, and close any daw or app using the jack, then listen again.',
 	air: 'nothing came through. hold the tonic closer to the mic, set its volume to 16, keep the room quiet, then listen again.',
 };
 
@@ -102,7 +102,7 @@ function levelText(peak) {
 	const pct = Math.round(peak * 100);
 	if (peak > 0.98) return `level ${pct}% · too loud, lower the volume`;
 	if (peak < 0.01) return 'no signal';
-	if (peak < 0.12) return `level ${pct}% · low, raise the volume`;
+	if (peak < 0.12) return `level ${pct}% · low, raise the volume or close apps using the jack`;
 	return `level ${pct}% · ok`;
 }
 
@@ -132,7 +132,7 @@ async function listen() {
 				$('status').textContent = 'receiving';
 			}
 			if (synced && !out.synced && !out.done) {
-				$('status').textContent = `lost the signal after ${packets.length} packet${packets.length === 1 ? '' : 's'}, peaking at ${Math.round(loudest * 100)}%. check the tonic's volume is 16, then press write + sound again.`;
+				$('status').textContent = `lost the signal after ${packets.length} packet${packets.length === 1 ? '' : 's'}, peaking at ${Math.round(loudest * 100)}%. check tonic volume 16 and close any daw or app using the jack, then press write + sound again.`;
 				decoder.reset(capture.sampleRate);
 				started = 0;
 			}
