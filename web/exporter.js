@@ -1,4 +1,5 @@
 import { loadEncoder } from './po32.js';
+import { sendFile, SHARE_ICON, SHARES } from './share.js';
 import { toWav } from './wav.js';
 import { exportPackets } from './transfer.js';
 import { loadVault, patternName, saveVault, shortDate } from './vault.js';
@@ -126,9 +127,7 @@ function render() {
 function download() {
 	const { packets } = exportPackets(vault);
 	const { samples } = encoder.render(packets, 48000);
-	const a = el('a', { href: URL.createObjectURL(toWav(samples.map((s) => s * 0.7), 48000)), download: `tonic-export-${new Date().toISOString().slice(0, 10)}.wav` });
-	a.click();
-	URL.revokeObjectURL(a.href);
+	sendFile(new File([toWav(samples.map((s) => s * 0.7), 48000)], `tonic-export-${new Date().toISOString().slice(0, 10)}.wav`, { type: 'audio/wav' }));
 }
 
 // Plays the transfer out of the default output, about -3 dB, with progress per packet.
@@ -220,6 +219,10 @@ $('stop').addEventListener('click', () => {
 	sending.stopped = true;
 	sending.source.stop();
 });
+if (SHARES) {
+	$('download').innerHTML = `${SHARE_ICON}.wav`;
+	$('download').setAttribute('aria-label', 'share backup .wav');
+}
 $('download').addEventListener('click', download);
 addEventListener('pageshow', (e) => {
 	if (!e.persisted) return;
