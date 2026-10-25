@@ -11,11 +11,13 @@ export function createPlayer(synth) {
 	let timer = 0;
 	let frame = 0;
 	let onStop = null;
+	let idle = 0;
 	const cache = new Map();
 	const voices = [];
 
 	// Browsers only allow audio to start from a tap, so the context is made on first use.
 	function context() {
+		clearTimeout(idle);
 		if (!ctx) {
 			ctx = new AudioContext();
 			master = ctx.createGain();
@@ -38,6 +40,16 @@ export function createPlayer(synth) {
 			cache.set(key, buffer);
 		}
 		return cache.get(key);
+	}
+
+	// Closes the context once playback ends. An open one holds the output device, and a Mac's headset jack carrying
+	// the Tonic's line out reads about 34 dB quieter while its output is held.
+	function releaseAfter(seconds) {
+		clearTimeout(idle);
+		idle = setTimeout(() => {
+			ctx.close();
+			ctx = null;
+		}, seconds * 1000);
 	}
 
 	// Each of the Tonic's four channels plays one sound at a time, so a new hit cuts off the last one on its channel.
@@ -64,6 +76,7 @@ export function createPlayer(synth) {
 				v.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.01);
 				v.source.stop(ctx.currentTime + 0.06);
 			}
+			releaseAfter(0.2);
 		}
 		const done = onStop;
 		onStop = null;
@@ -81,7 +94,9 @@ export function createPlayer(synth) {
 		audition(soundSet, sound, morph = 0) {
 			stop();
 			context();
-			start(hitBuffer(soundSet, sound, morph, false), 0, ctx.currentTime + 0.01);
+			const buffer = hitBuffer(soundSet, sound, morph, false);
+			start(buffer, 0, ctx.currentTime + 0.01);
+			releaseAfter(buffer.duration + 0.2);
 		},
 
 		/*
