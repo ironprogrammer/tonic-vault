@@ -1,21 +1,14 @@
-// Packs one pattern and its sound set into a URL fragment, so a link plays it without a vault and can save it to one.
+// Packs one pattern into a URL fragment, so a link plays it with factory sounds without a vault and can save it to one.
 
+import { factorySet } from './factory.js';
 import { fromBase64, toBase64 } from './pattern.js';
 
 const VERSION = 1;
 
-/*
- * Bytes: version, bpm, swing, a 2-byte text length, the text (pattern name, set name, then 16 sound names, joined by
- * newlines), then the pattern payload and every patch in the set, each after its length. Sent as base64url, about 2.5 KB.
- * The whole set goes along so a saved pattern lands on the same sound set it has in the sender's vault.
- */
-export function packLink(pattern, set) {
-	const raw = fromBase64(pattern.raw);
-	const text = new TextEncoder().encode([pattern.name, set.name ?? '', ...(set.soundNames ?? [])].map((t) => t.replace(/\n/g, ' ')).join('\n'));
-	const patches = set.sounds.map(fromBase64);
-	const bytes = new Uint8Array([
-		VERSION, pattern.bpm, pattern.swing, text.length >> 8, text.length & 0xff, ...text, ...[raw, ...patches].flatMap((p) => [p.length, ...p]),
-	]);
+// Bytes: version, bpm, swing, then the name (up to 255 bytes) and the pattern payload, each after its length. Sent as base64url.
+export function packLink(pattern) {
+	const name = new TextEncoder().encode(pattern.name).subarray(0, 255);
+	const bytes = new Uint8Array([VERSION, pattern.bpm, pattern.swing, ...[name, fromBase64(pattern.raw)].flatMap((p) => [p.length, ...p])]);
 	return toBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
@@ -23,13 +16,12 @@ export function packLink(pattern, set) {
 export function unpackLink(fragment) {
 	const bytes = fromBase64(fragment.replace(/-/g, '+').replace(/_/g, '/'));
 	if (bytes[0] !== VERSION) throw new Error('unknown link version');
-	const textEnd = 5 + ((bytes[3] << 8) | bytes[4]);
-	const [name, setName, ...soundNames] = new TextDecoder().decode(bytes.subarray(5, textEnd)).split('\n');
-	const [raw, ...patches] = chunks(bytes.subarray(textEnd));
-	const sounds = patches.map(toBase64);
+	const [name, raw] = chunks(bytes.subarray(3));
+	if (!raw?.length) throw new Error('broken link');
+	const set = factorySet();
 	return {
-		pattern: { name, bpm: bytes[1], swing: bytes[2], slot: raw[0] + 1, soundSetId: 'link', raw: toBase64(raw) },
-		set: { id: 'link', name: setName, soundNames, sounds },
+		pattern: { name: new TextDecoder().decode(name), bpm: bytes[1], swing: bytes[2], slot: raw[0] + 1, soundSetId: set.id, raw: toBase64(raw) },
+		set,
 	};
 }
 
@@ -40,6 +32,5 @@ function chunks(bytes) {
 		if (pos + 1 + bytes[pos] > bytes.length) throw new Error('broken link');
 		out.push(bytes.subarray(pos + 1, pos + 1 + bytes[pos]));
 	}
-	if (!out.length) throw new Error('broken link');
 	return out;
 }

@@ -2,7 +2,7 @@ import { player, PLAY_ICON, STOP_ICON } from './audio.js';
 import { packLink, unpackLink } from './link.js';
 import { patternMidi } from './midi.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
-import { addToExport, isNew, loadVault, patternName, saveLinked, saveVault, shortDate } from './vault.js';
+import { addToExport, FACTORY_SET_ID, isNew, loadVault, patternName, saveLinked, saveVault, shortDate } from './vault.js';
 import { sendFile, sendLink, SHARE_ICON, SHARES } from './share.js';
 import { toWav } from './wav.js';
 
@@ -137,7 +137,7 @@ if (!pattern) {
 	const playable = playableSoundSet(set);
 	document.title = `Tonic vault ${patternName(pattern, names)}`;
 	$('meta').textContent = link
-		? 'shared link'
+		? 'shared link · factory sounds'
 		: [`slot ${pattern.slot}`, set ? `sounds ${set.name || shortDate(set.firstSeen)}` : 'sounds missing', shortDate(pattern.firstSeen)].join(' · ');
 	$('new').hidden = link || !isNew(vault, pattern);
 	$('name').value = pattern.name;
@@ -180,9 +180,9 @@ if (!pattern) {
 		setPlayIcon(true);
 	});
 	// The link takes the bpm and swing as they are now.
-	$('share-link').hidden = !playable;
+	$('not-factory').hidden = pattern.soundSetId === FACTORY_SET_ID;
 	$('link').addEventListener('click', () => {
-		sendLink(`${location.origin}${location.pathname}#${packLink(pattern, set)}`, patternName(pattern, names), $('link'));
+		sendLink(`${location.origin}${location.pathname}#${packLink(pattern)}`, patternName(pattern, names), $('link'));
 	});
 	$('save').addEventListener('click', async () => {
 		player.stop();
