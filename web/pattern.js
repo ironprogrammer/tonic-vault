@@ -30,6 +30,15 @@ export function parsePattern(bytes) {
 	return { slot: bytes[0] + 1, hits, accents, effects };
 }
 
+/*
+ * Where a step starts and how long it lasts once swung, in straight steps. Swing (0-18) delays every second step by up to
+ * 0.36 of a step, which shortens it and lengthens the step before. The curve is a guess until it's measured on the Tonic.
+ */
+export function swungStep(step, swing) {
+	const delay = (s) => (s % 2 ? 2 * swing / 100 : 0);
+	return { offset: delay(step), span: 1 + delay(step + 1) - delay(step) };
+}
+
 // A hit whose knob values differ from that sound's most common values in the pattern is a parameter lock.
 function markLocks(hits) {
 	const counts = new Map();

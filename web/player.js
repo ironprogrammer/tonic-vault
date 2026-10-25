@@ -1,5 +1,7 @@
 // Plays patterns and single sounds through Web Audio. Each hit is rendered once by libpo32's synth and cached.
 
+import { swungStep } from './pattern.js';
+
 const LOOKAHEAD = 0.12;
 const HIT_SECONDS = 2.5;
 
@@ -85,7 +87,7 @@ export function createPlayer(synth) {
 		/*
 		 * Loops a parsed pattern until stop(). timing is { bpm, swing } and is read every step, so edits apply live.
 		 * onStep gets the step index as it sounds, then null on stop.
-		 * Swing (0-18, shown on the Tonic as S00-S18) delays every second step; the exact curve is a guess.
+		 * Swing (0-18, shown on the Tonic as S00-S18) is applied by swungStep.
 		 */
 		play(pattern, soundSet, timing, onStep = () => {}) {
 			stop();
@@ -99,10 +101,11 @@ export function createPlayer(synth) {
 			const schedule = () => {
 				while (next < ctx.currentTime + LOOKAHEAD) {
 					const length = 60 / timing.bpm / 4;
-					const at = next + (step % 2 ? length * 2 * timing.swing / 100 : 0);
+					const { offset, span } = swungStep(step, timing.swing);
+					const at = next + offset * length;
 					for (const h of hits.filter((h) => h.step === step)) {
 						const buffer = hitBuffer(soundSet, h.sound, h.morph, h.accent);
-						for (let k = 0; k < h.multiplier; k++) start(buffer, h.lane, at + (k * length) / h.multiplier);
+						for (let k = 0; k < h.multiplier; k++) start(buffer, h.lane, at + (k * span * length) / h.multiplier);
 					}
 					queue.push({ step, at });
 					next += length;

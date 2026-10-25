@@ -102,9 +102,13 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Built (`export.html`): the slot grid, sounds and tempo/swing/chain options, send with progress and stop, and the backup .wav. "Add to export" in the library and pattern detail puts patterns in their last slot, or queues them for the export screen to place when that slot is taken. A test renders an export and decodes it back to the same packets.
    - Worked on the Tonic on 10.24: three patterns sent over the cable to its line in. Not built: editing the chain (it's the sent slots in order).
    - Sending the state packet also sets the Tonic's knob positions. They come from the sound set's last state packet, which the vault only stores from imports made after 10.23; without one, libpo32's defaults are sent.
-4. **MIDI.** Export a pattern as a .mid file to drop into a DAW. Map sounds to drum notes (GM by default, editable), accents to velocity, multipliers to repeated hits, and parameter locks to CC. Next after hosting, ahead of everything in Later unless an item there is needed for an accurate file.
-5. **Later.** Editing the chain on export, decoding the effect bytes, naming a sound pack's sounds, and playing pitch locks in the browser.
-6. **Someday.** Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
+4. **MIDI and sharing.** Next after hosting, in this order:
+   - Download or share a pattern's .mid from the pattern page. It's one bar at 480 ticks per quarter note on channel 1, ending exactly on the bar so a DAW loops it at one bar. Sounds 1 to 16 play notes 36 to 51 (C1 up, the drum pad layout), accents set velocity, multipliers become repeated hits, and swing is baked into note timing. Parameter locks and effects are left out so the file stays plain.
+   - Measure the Tonic's swing from a line-out recording, so playback and MIDI use its real timing.
+   - Render a pattern to .wav, to download or share.
+   - Share links. The link's `#fragment` carries the pattern, its sounds, name, bpm, and swing (about 2 KB), and opens a page where anyone can play it and get its .mid or .wav without a vault.
+5. **Later.** Editing the chain on export, decoding the effect bytes, naming a sound pack's sounds, playing pitch locks in the browser, and rendering a pattern's sounds as one-shot .wav files to load into a DAW's drum pads.
+6. **Someday.** Importing a shared link's pattern into your own vault. Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
 
 ## Development
 

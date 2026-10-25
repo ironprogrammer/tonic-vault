@@ -1,4 +1,5 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
+import { midiFile } from './midi.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
 import { addToExport, isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
 
@@ -94,6 +95,19 @@ function unusedTags() {
 	return [...new Set(vault.patterns.flatMap((p) => p.tags))].filter((t) => !pattern.tags.includes(t)).sort();
 }
 
+// On a phone the share sheet can AirDrop or message the file; elsewhere it downloads.
+const SHARES = matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [new File([], 'x.mid', { type: 'audio/midi' })] });
+const SHARE_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 10V2M5 4.5 8 2l3 2.5M5.5 7H3.5v6.5h9V7h-2"/></svg>';
+
+function sendFile(file) {
+	if (SHARES) return navigator.share({ files: [file] }).catch(() => {});
+	const a = document.createElement('a');
+	a.href = URL.createObjectURL(file);
+	a.download = file.name;
+	a.click();
+	URL.revokeObjectURL(a.href);
+}
+
 function setPlayIcon(playing) {
 	$('play').innerHTML = playing ? STOP_ICON : PLAY_ICON;
 	$('play').setAttribute('aria-label', playing ? 'stop' : 'play pattern');
@@ -144,6 +158,14 @@ if (!pattern) {
 			if (step === null) setPlayIcon(false);
 		});
 		setPlayIcon(true);
+	});
+	if (SHARES) {
+		$('midi').innerHTML = `${SHARE_ICON}.mid`;
+		$('midi').setAttribute('aria-label', 'share .mid');
+	}
+	$('midi').addEventListener('click', () => {
+		const name = patternName(pattern, vault);
+		sendFile(midiFile(parsed, { name, bpm: pattern.bpm, swing: pattern.swing }));
 	});
 	// Its last slot if that's free in the export; otherwise the export screen asks for one.
 	$('add-export').addEventListener('click', () => {
