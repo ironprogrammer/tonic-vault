@@ -1,6 +1,6 @@
 // The vault document: decoding a transfer's packets into sounds and patterns, and merging them in.
 
-import { toBase64 } from './pattern.js';
+import { fromBase64, toBase64 } from './pattern.js';
 import { TAG } from './po32.js';
 
 const STORAGE_KEY = 'tonic-vault';
@@ -135,6 +135,16 @@ export async function importTransfer(vault, packets, now = new Date().toISOStrin
 		vault.tonic = { seen: now, soundSetId: result.soundSet?.id ?? vault.tonic?.soundSetId ?? null, slots, ...state };
 	}
 	return result;
+}
+
+// Saves a shared link's pattern and sound set, reusing either one the vault already has. Returns the vault's pattern.
+export async function saveLinked(vault, { pattern, set }, now) {
+	const packets = [...set.sounds, pattern.raw].map((b64, i) => ({ tag: i < set.sounds.length ? TAG.patch : TAG.pattern, payload: fromBase64(b64) }));
+	const result = await importTransfer(vault, packets, now, { fromTonic: false, setName: set.name });
+	if (result.newSoundSet) result.soundSet.soundNames = set.soundNames;
+	const [saved] = result.newPatterns;
+	if (saved) Object.assign(saved, { name: pattern.name, bpm: pattern.bpm, swing: pattern.swing });
+	return saved ?? result.knownPatterns[0];
 }
 
 // Unnamed patterns go by their sound set's name, such as a TE sound pack's, and their slot.

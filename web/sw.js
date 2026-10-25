@@ -4,7 +4,7 @@
  */
 const CACHE = 'tonic-vault';
 const SHELL = [
-	'./', 'index.html', 'import.html', 'export.html', 'pattern.html', 'style.css', 'manifest.webmanifest',
+	'./', 'index.html', 'about.html', 'import.html', 'export.html', 'pattern.html', 'style.css', 'manifest.webmanifest',
 	'audio.js', 'capture-worklet.js', 'detail.js', 'exporter.js', 'import.js', 'library.js', 'link.js', 'midi.js', 'pattern.js',
 	'player.js', 'po32.js', 'share.js', 'po32.wasm', 'transfer.js', 'vault.js', 'wav.js',
 	'icons/app.svg', 'icons/app-192.png', 'icons/apple-touch-icon.png', 'icons/key-held.svg', 'icons/key-pressed.svg',

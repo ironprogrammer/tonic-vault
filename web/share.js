@@ -12,17 +12,20 @@ export function sendFile(file) {
 	});
 }
 
-// A link goes to the share sheet on a phone, and to the clipboard elsewhere, with the button saying so for a moment.
+// A link goes to the share sheet on a phone, and to the clipboard elsewhere. The button's label says how it went for a moment.
 export function sendLink(url, title, button) {
-	if (SHARES) {
-		navigator.share({ title, url }).catch((e) => e.name === 'AbortError' || console.error(e));
-		return;
-	}
 	const label = button.querySelector('span');
-	navigator.clipboard.writeText(url).then(() => {
-		label.textContent = 'copied';
-		setTimeout(() => (label.textContent = 'link'), 1500);
-	}, (e) => console.error(e));
+	const say = (text) => {
+		const was = label.textContent;
+		label.textContent = text;
+		setTimeout(() => (label.textContent = was), 2000);
+	};
+	const failed = (e) => {
+		console.error(e);
+		say(`failed: ${e.name}`);
+	};
+	if (SHARES) navigator.share({ title, url }).catch((e) => e.name === 'AbortError' || failed(e));
+	else navigator.clipboard.writeText(url).then(() => say('copied'), failed);
 }
 
 function download(file) {

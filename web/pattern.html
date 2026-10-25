@@ -18,13 +18,12 @@
 <main>
 
 <header class="top center">
-	<a href="./" class="square" aria-label="back to library"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></a>
+	<a id="back" href="./" class="square" aria-label="back to library"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></a>
 	<span id="meta" class="grow dim small"></span>
 	<span id="new" class="badge" hidden>new</span>
 	<div class="header-actions">
 		<button id="midi" class="outline icon-text" aria-label="download .mid"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"/></svg>.mid</button>
 		<button id="wav" class="outline icon-text" aria-label="download .wav"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"/></svg>.wav</button>
-		<button id="link" class="outline icon-text" aria-label="copy a link anyone can play" title="a link anyone can play this pattern from, no vault needed"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1.3-1.3a2.5 2.5 0 0 1 3.5 3.5L10.5 8M9 11.5l-1.3 1.3a2.5 2.5 0 0 1-3.5-3.5L5.5 8"/></svg><span>link</span></button>
 	</div>
 </header>
 
@@ -61,6 +60,14 @@
 	<section id="vault-actions">
 		<button id="add-export" class="primary">add to export</button>
 		<button id="delete" class="outline">delete pattern</button>
+	</section>
+	<section id="link-actions" hidden>
+		<button id="save" class="primary">save to my vault</button>
+	</section>
+
+	<section id="share-link">
+		<button id="link" class="outline icon-text"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1.3-1.3a2.5 2.5 0 0 1 3.5 3.5L10.5 8M9 11.5l-1.3 1.3a2.5 2.5 0 0 1-3.5-3.5L5.5 8"/></svg><span>copy link</span></button>
+		<p class="dim small">a link to this pattern and its sounds. anyone can open it to play it, download its .mid or .wav, or save it to their own vault.</p>
 	</section>
 </div>
 

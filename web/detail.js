@@ -2,7 +2,7 @@ import { player, PLAY_ICON, STOP_ICON } from './audio.js';
 import { packLink, unpackLink } from './link.js';
 import { patternMidi } from './midi.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
-import { addToExport, isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
+import { addToExport, isNew, loadVault, patternName, saveLinked, saveVault, shortDate } from './vault.js';
 import { sendFile, sendLink, SHARE_ICON, SHARES } from './share.js';
 import { toWav } from './wav.js';
 
@@ -11,6 +11,8 @@ const vault = loadVault();
 // A shared link's #fragment carries its own pattern and sounds, which play here without touching the vault.
 const link = location.hash.length > 1 ? readLink(location.hash.slice(1)) : null;
 const pattern = link ? link.pattern : vault.patterns.find((p) => p.id === new URLSearchParams(location.search).get('id'));
+// Where an unnamed pattern finds its sound set's name for its default name.
+const names = link ? { soundSets: [link.set] } : vault;
 
 function readLink(fragment) {
 	try {
@@ -112,7 +114,7 @@ function unusedTags() {
 
 // A file named after the pattern, minus characters file systems reject.
 function patternFile(data, ext, type) {
-	return new File([data], `${patternName(pattern, vault).replace(/[\\/:*?"<>|]/g, '-')}.${ext}`, { type });
+	return new File([data], `${patternName(pattern, names).replace(/[\\/:*?"<>|]/g, '-')}.${ext}`, { type });
 }
 
 function setPlayIcon(playing) {
@@ -133,13 +135,13 @@ if (!pattern) {
 	const parsed = parsePattern(fromBase64(pattern.raw));
 	const set = link ? link.set : vault.soundSets.find((s) => s.id === pattern.soundSetId);
 	const playable = playableSoundSet(set);
-	document.title = `Tonic vault ${patternName(pattern, vault)}`;
+	document.title = `Tonic vault ${patternName(pattern, names)}`;
 	$('meta').textContent = link
-		? `slot ${pattern.slot} · shared link`
+		? 'shared link'
 		: [`slot ${pattern.slot}`, set ? `sounds ${set.name || shortDate(set.firstSeen)}` : 'sounds missing', shortDate(pattern.firstSeen)].join(' · ');
 	$('new').hidden = link || !isNew(vault, pattern);
 	$('name').value = pattern.name;
-	$('name').placeholder = patternName({ ...pattern, name: '' }, vault);
+	$('name').placeholder = patternName({ ...pattern, name: '' }, names);
 	$('name').readOnly = Boolean(link);
 	$('name').addEventListener('change', () => { pattern.name = $('name').value.trim(); save(); });
 
@@ -161,8 +163,10 @@ if (!pattern) {
 
 	renderGrid(parsed, set);
 	if (link) {
+		$('back').hidden = true;
 		$('tags').hidden = true;
 		$('vault-actions').hidden = true;
+		$('link-actions').hidden = false;
 	} else renderTags();
 	setPlayIcon(false);
 	$('play').disabled = !playable;
@@ -176,19 +180,25 @@ if (!pattern) {
 		setPlayIcon(true);
 	});
 	// The link takes the bpm and swing as they are now.
-	$('link').hidden = !playable;
+	$('share-link').hidden = !playable;
 	$('link').addEventListener('click', () => {
-		const name = patternName(pattern, vault);
-		sendLink(`${location.origin}${location.pathname}#${packLink(pattern, set, name)}`, name, $('link'));
+		sendLink(`${location.origin}${location.pathname}#${packLink(pattern, set)}`, patternName(pattern, names), $('link'));
+	});
+	$('save').addEventListener('click', async () => {
+		player.stop();
+		const saved = await saveLinked(vault, link);
+		saveVault(vault);
+		location.replace(`pattern.html?id=${saved.id}`);
 	});
 	if (SHARES) {
+		$('link').querySelector('span').textContent = 'share link';
 		for (const id of ['midi', 'wav']) {
 			$(id).innerHTML = `${SHARE_ICON}.${id === 'midi' ? 'mid' : 'wav'}`;
 			$(id).setAttribute('aria-label', `share .${id === 'midi' ? 'mid' : 'wav'}`);
 		}
 	}
 	$('midi').addEventListener('click', () => {
-		sendFile(patternFile(patternMidi(parsed, { name: patternName(pattern, vault), bpm: pattern.bpm, swing: pattern.swing }), 'mid', 'audio/midi'));
+		sendFile(patternFile(patternMidi(parsed, { name: patternName(pattern, names), bpm: pattern.bpm, swing: pattern.swing }), 'mid', 'audio/midi'));
 	});
 	// Four bars, rendered ahead because iOS only opens the share sheet straight from a tap. The button waits for it.
 	let wavSamples = null;

@@ -176,6 +176,7 @@ main > p:empty { display: none; }
 .nowrap { white-space: nowrap; }
 
 .header-actions { display: flex; gap: 8px; }
+#share-link .icon-text { justify-content: center; }
 .set-row.selected { background: rgba(239, 235, 225, 0.1); }
 .set-row .meta { flex-wrap: wrap; }
 .links { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-top: 8px; border-top: 1px solid var(--faint); }

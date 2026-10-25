@@ -107,16 +107,16 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Done: download or share a pattern's .mid from the pattern page. It's one bar at 480 ticks per quarter note on channel 1, ending exactly on the bar so a DAW loops it at one bar. Sounds 1 to 16 play notes 36 to 51 (C1 up, the drum pad layout), accents set velocity, multipliers become repeated hits, and swing is baked into note timing. Parameter locks and effects are left out so the file stays plain.
    - Done: measure the Tonic's swing from a line-out recording, so playback and MIDI use its real timing.
    - Done: render four bars of a pattern to .wav, to download or share.
-   - Done: share links. The pattern page's link button copies (or on a phone, shares) `pattern.html#<fragment>`. The fragment carries the pattern, the patches and names of the sounds it plays, its name, bpm, and swing as length-prefixed bytes in base64url, about 600 characters for a two-sound pattern. Opening it plays the pattern and offers its .mid and .wav without reading or writing the vault.
+   - Done: share links. The pattern page's link button, below the pattern, copies (or on a phone, shares) `pattern.html#<fragment>`. The fragment carries the pattern, its name, bpm, and swing, and its whole sound set with names, as length-prefixed bytes in base64url, about 2.4K characters. Opening it plays the pattern and offers its .mid and .wav without touching the vault until "save to my vault", which imports the pattern and set like a transfer, so both keep the ids they have in the sender's vault.
 5. **Later.** Editing the chain on export, decoding the effect bytes, naming a sound pack's sounds, playing pitch locks in the browser, and rendering a pattern's sounds as one-shot .wav files to load into a DAW's drum pads.
-6. **Someday.** Importing a shared link's pattern into your own vault. Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
+6. **Someday.** Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
 
 ## Development
 
 - `make -C phase0` builds libpo32's decoder, demo, and pattern editor natively with clang. cmake isn't needed.
 - `phase0/build/frame <tag-hex>:<payload.bin> ...` builds a transfer from raw packet payloads (such as the `payload.bin` files `po32_decode_capture` writes) and prints 48 kHz f32 audio. Pipe it through `sox -t f32 -r 48000 -c 1 - -b 16 out.wav gain -3`, then `play out.wav` with the Tonic in receive mode.
 - The pinned libpo32 commit is only on the PR, so a fresh clone needs `git -C vendor/libpo32 fetch origin pull/20/head` before `git submodule update`.
-- `make -C web` builds `po32.wasm` (decoder, synth, and encoder), and `make -C web test` runs the node tests against the fixture below. The app is static files in `web/`: `index.html` (library), `import.html`, `export.html`, and `pattern.html`.
+- `make -C web` builds `po32.wasm` (decoder, synth, and encoder), and `make -C web test` runs the node tests against the fixture below. The app is static files in `web/`: `index.html` (library), `import.html`, `export.html`, `pattern.html`, and `about.html`.
 - Pushes to `main` run `.github/workflows/pages.yml`, which builds and tests `po32.wasm` with Ubuntu's clang and lld (`CLANG` and `WASM_LD` override the Homebrew paths) and deploys `web/` to https://ironprogrammer.com/tonic-vault/. `web/sw.js` serves from the network first and falls back to its cache offline.
 - `tests/fixtures/tonic-backup-2026-10-22.wav` is a real Tonic backup (cable, 48 kHz mono, 49 packets) so decode work doesn't need a fresh transfer each time. New captures land in the gitignored `phase0/captures/`.
 

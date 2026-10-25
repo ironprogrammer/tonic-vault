@@ -1,19 +1,18 @@
-// Packs one pattern and the sounds it plays into a URL fragment, so a link plays it without a vault.
+// Packs one pattern and its sound set into a URL fragment, so a link plays it without a vault and can save it to one.
 
-import { fromBase64, parsePattern, toBase64 } from './pattern.js';
+import { fromBase64, toBase64 } from './pattern.js';
 
 const VERSION = 1;
 
 /*
- * Bytes: version, bpm, swing, a 2-byte text length, the text (the name, then 16 sound names joined by newlines),
- * then the pattern payload and the patches of each sound it plays, each after its length. Sent as base64url, about 1-2 KB.
+ * Bytes: version, bpm, swing, a 2-byte text length, the text (pattern name, set name, then 16 sound names, joined by
+ * newlines), then the pattern payload and every patch in the set, each after its length. Sent as base64url, about 2.5 KB.
+ * The whole set goes along so a saved pattern lands on the same sound set it has in the sender's vault.
  */
-export function packLink(pattern, set, name) {
+export function packLink(pattern, set) {
 	const raw = fromBase64(pattern.raw);
-	const used = new Set(parsePattern(raw).hits.map((h) => h.sound));
-	const soundNames = (set.soundNames ?? []).map((n, i) => (used.has(i + 1) ? n.replace(/\n/g, ' ') : ''));
-	const text = new TextEncoder().encode([name.replace(/\n/g, ' '), ...soundNames].join('\n'));
-	const patches = set.sounds.map(fromBase64).filter((p) => used.has((p[0] & 0x0f) + 1));
+	const text = new TextEncoder().encode([pattern.name, set.name ?? '', ...(set.soundNames ?? [])].map((t) => t.replace(/\n/g, ' ')).join('\n'));
+	const patches = set.sounds.map(fromBase64);
 	const bytes = new Uint8Array([
 		VERSION, pattern.bpm, pattern.swing, text.length >> 8, text.length & 0xff, ...text, ...[raw, ...patches].flatMap((p) => [p.length, ...p]),
 	]);
@@ -25,12 +24,12 @@ export function unpackLink(fragment) {
 	const bytes = fromBase64(fragment.replace(/-/g, '+').replace(/_/g, '/'));
 	if (bytes[0] !== VERSION) throw new Error('unknown link version');
 	const textEnd = 5 + ((bytes[3] << 8) | bytes[4]);
-	const [name, ...soundNames] = new TextDecoder().decode(bytes.subarray(5, textEnd)).split('\n');
+	const [name, setName, ...soundNames] = new TextDecoder().decode(bytes.subarray(5, textEnd)).split('\n');
 	const [raw, ...patches] = chunks(bytes.subarray(textEnd));
 	const sounds = patches.map(toBase64);
 	return {
-		pattern: { name, bpm: bytes[1], swing: bytes[2], slot: raw[0] + 1, raw: toBase64(raw) },
-		set: { id: 'link', name: '', soundNames, sounds },
+		pattern: { name, bpm: bytes[1], swing: bytes[2], slot: raw[0] + 1, soundSetId: 'link', raw: toBase64(raw) },
+		set: { id: 'link', name: setName, soundNames, sounds },
 	};
 }
 
