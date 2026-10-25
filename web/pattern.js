@@ -30,13 +30,35 @@ export function parsePattern(bytes) {
 	return { slot: bytes[0] + 1, hits, accents, effects };
 }
 
+// How far swing (0-18, S00-S18 on the Tonic) delays a step, in steps. It's ticks of a 96 ppqn clock: S12 delays odd steps by half a step.
+export function swingDelay(step, swing) {
+	return step % 2 ? swing / 24 : 0;
+}
+
 /*
- * Where a step starts and how long it lasts once swung, in straight steps. Swing (0-18) delays every second step by up to
- * 0.36 of a step, which shortens it and lengthens the step before. The curve is a guess until it's measured on the Tonic.
+ * When each hit and multiplier repeat sounds in a looping bar, in steps from 0 to 16, as measured on the Tonic.
+ * Repeats are a straight step / multiplier apart from the swung hit, and stop when the next hit on the same channel
+ * starts, wrapping into the next bar if they run past it. end is when the note should stop, for MIDI.
  */
-export function swungStep(step, swing) {
-	const delay = (s) => (s % 2 ? 2 * swing / 100 : 0);
-	return { offset: delay(step), span: 1 + delay(step + 1) - delay(step) };
+export function barHits(hits, swing) {
+	const at = (h) => h.step + swingDelay(h.step, swing);
+	const out = [];
+	for (const h of hits) {
+		const start = at(h);
+		const lane = hits.filter((o) => o.lane === h.lane).map(at);
+		const next = Math.min(...lane.filter((t) => t > start), Math.min(...lane) + 16);
+		for (let k = 0; k < h.multiplier; k++) {
+			let time = start + k / h.multiplier;
+			if (k && time >= next) break;
+			let end = Math.min(time + 0.5 / h.multiplier, next);
+			if (time >= 16) {
+				time -= 16;
+				end -= 16;
+			} else end = Math.min(end, 16);
+			out.push({ hit: h, time, end });
+		}
+	}
+	return out.sort((a, b) => a.time - b.time);
 }
 
 // A hit whose knob values differ from that sound's most common values in the pattern is a parameter lock.

@@ -1,6 +1,6 @@
 // Writes a pattern as a standard MIDI file for a DAW.
 
-import { swungStep } from './pattern.js';
+import { barHits } from './pattern.js';
 
 const PPQ = 480;
 const STEP = PPQ / 4;
@@ -19,19 +19,14 @@ function meta(type, data) {
 /*
  * One bar on channel 1 at 480 ticks per quarter note, ending exactly on the bar so a DAW loops it at one bar.
  * Sound n plays note 35 + n (sound 1 on C1, the first drum pad). Accents are velocity 127, other hits 100.
- * A multiplier repeats the hit evenly across its swung step, and each note lasts half the gap to the next repeat.
+ * Timing comes from barHits, so swing and multiplier repeats match the Tonic.
  */
 export function patternMidi(parsed, { name, bpm, swing }) {
 	const events = [];
-	for (const h of parsed.hits) {
-		const { offset, span } = swungStep(h.step, swing);
-		const gap = (span * STEP) / h.multiplier;
-		const note = 35 + h.sound;
-		for (let k = 0; k < h.multiplier; k++) {
-			const on = (h.step + offset) * STEP + k * gap;
-			events.push({ tick: Math.round(on), data: [0x90, note, h.accent ? 127 : 100] });
-			events.push({ tick: Math.round(on + gap / 2), data: [0x80, note, 0] });
-		}
+	for (const { hit, time, end } of barHits(parsed.hits, swing)) {
+		const note = 35 + hit.sound;
+		events.push({ tick: Math.round(time * STEP), data: [0x90, note, hit.accent ? 127 : 100] });
+		events.push({ tick: Math.round(end * STEP), data: [0x80, note, 0] });
 	}
 	// Note-offs sort before note-ons on the same tick.
 	events.sort((a, b) => a.tick - b.tick || a.data[0] - b.data[0]);

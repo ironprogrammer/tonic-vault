@@ -35,7 +35,7 @@ function readMidi(bytes) {
 	return { ppq, events };
 }
 
-const hit = (step, sound, extra = {}) => ({ step, sound, multiplier: 1, accent: false, ...extra });
+const hit = (step, sound, extra = {}) => ({ step, sound, lane: (sound - 1) % 4, multiplier: 1, accent: false, ...extra });
 
 test('a pattern becomes one looping bar of drum pad notes', () => {
 	const parsed = { hits: [hit(0, 1), hit(4, 2, { accent: true }), hit(8, 16, { multiplier: 3 })] };
@@ -47,12 +47,19 @@ test('a pattern becomes one looping bar of drum pad notes', () => {
 	assert.deepEqual(events.at(-1), { tick: 1920, meta: 0x2f, data: [] });
 });
 
-test('swing delays odd steps and keeps every note inside the bar', () => {
+test('swing delays odd steps by swing / 24 of a step and keeps every note inside the bar', () => {
 	const parsed = { hits: [hit(1, 1), hit(15, 3, { multiplier: 15 })] };
 	const { events } = readMidi(patternMidi(parsed, { name: 'swung', bpm: 120, swing: 18 }));
 	const notes = events.filter((e) => e.status);
-	assert.equal(notes[0].tick, 120 + 43);
+	assert.equal(notes.find((e) => e.note === 36).tick, 120 + 90);
 	assert.equal(notes.filter((e) => e.status === 0x90).length, 16);
 	assert.ok(notes.every((e) => e.tick < 1920 || (e.status === 0x80 && e.tick === 1920)));
 	assert.equal(events.at(-1).tick, 1920);
+});
+
+test('the next hit on a channel cuts off the last one\'s repeats', () => {
+	const parsed = { hits: [hit(1, 1, { multiplier: 4 }), hit(2, 5)] };
+	const { events } = readMidi(patternMidi(parsed, { name: 'cut', bpm: 120, swing: 12 }));
+	const ons = events.filter((e) => e.status === 0x90).map((e) => [e.tick, e.note]);
+	assert.deepEqual(ons, [[180, 36], [210, 36], [240, 40]]);
 });
