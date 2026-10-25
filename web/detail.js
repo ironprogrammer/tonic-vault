@@ -105,8 +105,17 @@ function patternFile(data, ext, type) {
 	return new File([data], `${patternName(pattern, vault).replace(/[\\/:*?"<>|]/g, '-')}.${ext}`, { type });
 }
 
+// Falls back to a download if sharing fails for any reason but the user closing the sheet.
 function sendFile(file) {
-	if (SHARES) return navigator.share({ files: [file] }).catch(() => {});
+	if (!SHARES) return download(file);
+	navigator.share({ files: [file] }).catch((e) => {
+		if (e.name === 'AbortError') return;
+		console.error(e);
+		download(file);
+	});
+}
+
+function download(file) {
 	const a = document.createElement('a');
 	a.href = URL.createObjectURL(file);
 	a.download = file.name;
@@ -176,16 +185,21 @@ if (!pattern) {
 	$('midi').addEventListener('click', () => {
 		sendFile(patternFile(patternMidi(parsed, { name: patternName(pattern, vault), bpm: pattern.bpm, swing: pattern.swing }), 'mid', 'audio/midi'));
 	});
-	// Four bars, rendered ahead because iOS only shares in response to a tap, and a render takes too long after one.
+	// Four bars, rendered ahead because iOS only opens the share sheet straight from a tap. The button waits for it.
 	let wavSamples = null;
+	let renders = 0;
 	const renderWav = () => {
-		wavSamples = playable && player.render(parsed, playable, pattern);
+		const id = ++renders;
+		$('wav').disabled = true;
+		if (!playable) return;
+		player.render(parsed, playable, pattern).then((samples) => {
+			if (id !== renders) return;
+			wavSamples = samples;
+			$('wav').disabled = false;
+		}, (e) => console.error(e));
 	};
 	renderWav();
-	$('wav').disabled = !playable;
-	$('wav').addEventListener('click', async () => {
-		sendFile(patternFile(toWav(await wavSamples, 48000), 'wav', 'audio/wav'));
-	});
+	$('wav').addEventListener('click', () => sendFile(patternFile(toWav(wavSamples, 48000), 'wav', 'audio/wav')));
 	// Its last slot if that's free in the export; otherwise the export screen asks for one.
 	$('add-export').addEventListener('click', () => {
 		player.stop();

@@ -98,7 +98,6 @@ main > p:empty { display: none; }
 .button-like { display: flex; align-items: center; justify-content: center; font-weight: 400; font-size: 15px; cursor: pointer; }
 .pair { flex-direction: row; }
 .pair > * { flex: 1; }
-.pair > .icon-text { justify-content: center; }
 
 .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .action { display: flex; flex-direction: column; gap: 12px; padding: 14px 12px 12px; border: 1px solid var(--line); text-decoration: none; }
@@ -172,7 +171,7 @@ main > p:empty { display: none; }
 .play-big { width: 72px; height: 72px; flex-shrink: 0; border: none; border-radius: 36px; background: var(--cream); color: var(--ground); display: flex; align-items: center; justify-content: center; }
 .play-big svg { width: 24px; height: 24px; }
 .field { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.field input { width: 100%; height: 44px; padding: 0; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--cream); font-weight: 300; font-size: 28px; }
+.field input { color-scheme: dark; width: 100%; height: 44px; padding: 0; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--cream); font-weight: 300; font-size: 28px; }
 .nowrap { white-space: nowrap; }
 
 .header-actions { display: flex; gap: 8px; }

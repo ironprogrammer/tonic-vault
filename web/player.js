@@ -94,6 +94,14 @@ export function createPlayer(synth) {
 
 		stop,
 
+		// Stops and releases the output device now rather than after a pause.
+		close() {
+			stop();
+			clearTimeout(idle);
+			ctx?.close();
+			ctx = null;
+		},
+
 		// Plays one sound at the given morph value (0-255).
 		audition(soundSet, sound, morph = 0) {
 			stop();
