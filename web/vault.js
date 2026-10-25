@@ -146,6 +146,15 @@ export async function saveLinked(vault, { pattern, set }, now) {
 	return saved ?? result.knownPatterns[0];
 }
 
+const BACKUP_AFTER_DAYS = 7;
+
+// Patterns added since the vault was last saved to a file, once the oldest has gone a week without a backup. Otherwise none.
+export function unsavedPatterns(vault, now = new Date()) {
+	const unsaved = vault.patterns.filter((p) => !vault.savedAt || p.firstSeen > vault.savedAt);
+	const oldest = unsaved.reduce((min, p) => (p.firstSeen < min ? p.firstSeen : min), now.toISOString());
+	return now - new Date(oldest) > BACKUP_AFTER_DAYS * 864e5 ? unsaved : [];
+}
+
 // Unnamed patterns go by their sound set's name, such as a TE sound pack's, and their slot.
 export function patternName(pattern, vault) {
 	const set = vault.soundSets.find((s) => s.id === pattern.soundSetId);

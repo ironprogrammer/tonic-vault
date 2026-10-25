@@ -2,14 +2,10 @@
 export const SHARES = matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [new File([], 'x.mid', { type: 'audio/midi' })] });
 export const SHARE_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 10V2M5 4.5 8 2l3 2.5M5.5 7H3.5v6.5h9V7h-2"/></svg>';
 
-// Falls back to a download if sharing fails for any reason but the user closing the sheet.
+// On a phone a failed share just logs, since a download there asks first and a second tap shares fine.
 export function sendFile(file) {
 	if (!SHARES) return download(file);
-	navigator.share({ files: [file] }).catch((e) => {
-		if (e.name === 'AbortError') return;
-		console.error(e);
-		download(file);
-	});
+	navigator.share({ files: [file] }).catch((e) => e.name === 'AbortError' || console.error(e));
 }
 
 // A link goes to the share sheet on a phone, and to the clipboard elsewhere. The button's label says how it went for a moment.

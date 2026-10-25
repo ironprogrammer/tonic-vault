@@ -97,6 +97,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON. Working: a full Tonic transfer imported in Chrome on 10.22 (`web/`, served at https://tonic-vault.test).
 2. **Library and playback.** The screens from the mock, with playback through the WASM synth. Installable as a PWA so it works on a phone.
    - Working: the library (`index.html`) and pattern detail (`pattern.html`), with sounds you can audition and patterns that loop through libpo32's synth. Morph, accents, multipliers, and the four channels cutting off their own hits all play. Pitch locks, effects, and add to export don't yet.
+   - The library asks the browser to keep its storage (`navigator.storage.persist()`) and, once a pattern has gone a week without a .json save, says how many patterns aren't backed up. Saving records `savedAt` in the vault and the file, and loading a file counts as saved.
    - Swing and multiplier timing were measured from line-out recordings on 10.25. Swing delays odd steps by swing/24 of a step (ticks of a 96 ppqn clock). A multiplier's repeats stay a straight step/multiplier apart from the swung hit, and the next hit on the channel cuts off the rest.
    - Still to do: checking playback against the Tonic by ear (slot 2 has a new pattern from 10.23 to compare after the next import).
 3. **Export.** Compose the patterns to send, render the transfer audio, play it into the Tonic, and download it as a WAV.

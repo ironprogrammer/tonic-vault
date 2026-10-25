@@ -1,6 +1,6 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
-import { addToExport, emptyVault, isNew, loadVault, patternName, saveVault, shortDate, upgradeVault } from './vault.js';
+import { addToExport, emptyVault, isNew, loadVault, patternName, saveVault, shortDate, unsavedPatterns, upgradeVault } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 let vault = loadVault();
@@ -189,6 +189,9 @@ function renderSelection() {
 function render() {
 	const n = vault.patterns.length;
 	$('vault-count').textContent = `${n} pattern${n === 1 ? '' : 's'}`;
+	const unsaved = unsavedPatterns(vault).length;
+	$('backup-due').hidden = !unsaved;
+	$('backup-due').textContent = `${unsaved} pattern${unsaved === 1 ? '' : 's'} not backed up. save keeps a copy outside this browser, in case it clears its storage.`;
 	const queued = vault.export.slots.filter(Boolean).length;
 	$('export-count').textContent = queued ? ` · ${queued} ready` : '';
 	renderFilters();
@@ -203,7 +206,10 @@ function save() {
 	render();
 }
 
+// The saved file is the backup, so it records when it was made, and the vault remembers that too.
 function downloadVault() {
+	vault.savedAt = new Date().toISOString();
+	save();
 	const blob = new Blob([JSON.stringify(vault, null, '\t')], { type: 'application/json' });
 	const a = el('a', { href: URL.createObjectURL(blob), download: `tonic-vault-${new Date().toISOString().slice(0, 10)}.json` });
 	a.click();
@@ -217,6 +223,7 @@ async function loadFile(file) {
 		if (!Array.isArray(loaded.patterns) || !Array.isArray(loaded.soundSets)) throw new Error('not a vault file');
 		upgradeVault(loaded);
 		if (!confirm(`replace this vault (${vault.patterns.length} patterns) with ${file.name} (${loaded.patterns.length} patterns)?`)) return;
+		loaded.savedAt = new Date().toISOString();
 		vault = loaded;
 		selected.clear();
 		save();
@@ -251,3 +258,6 @@ addEventListener('pageshow', (e) => {
 	render();
 });
 render();
+
+// Asks the browser not to clear the vault when it's short on space or the site goes unvisited, once there's something to lose.
+if (vault.patterns.length) navigator.storage?.persisted?.().then((kept) => kept || navigator.storage.persist());
