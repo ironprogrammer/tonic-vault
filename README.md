@@ -26,4 +26,4 @@ make -C web test
 
 Building `po32.wasm` needs Homebrew's `llvm` and `lld`. Pushes to `main` build, test, and deploy to GitHub Pages.
 
-PO-32 Tonic is a trademark of Teenage Engineering. This is an unofficial tool, not made or endorsed by them.
+MIT licensed. PO-32 Tonic is a trademark of Teenage Engineering. This is an unofficial tool, not made or endorsed by them.
