@@ -12,6 +12,19 @@ export function sendFile(file) {
 	});
 }
 
+// A link goes to the share sheet on a phone, and to the clipboard elsewhere, with the button saying so for a moment.
+export function sendLink(url, title, button) {
+	if (SHARES) {
+		navigator.share({ title, url }).catch((e) => e.name === 'AbortError' || console.error(e));
+		return;
+	}
+	const label = button.querySelector('span');
+	navigator.clipboard.writeText(url).then(() => {
+		label.textContent = 'copied';
+		setTimeout(() => (label.textContent = 'link'), 1500);
+	}, (e) => console.error(e));
+}
+
 function download(file) {
 	const a = document.createElement('a');
 	a.href = URL.createObjectURL(file);

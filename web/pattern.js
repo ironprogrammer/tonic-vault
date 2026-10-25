@@ -88,6 +88,10 @@ export function soundPatches(payloads) {
 	return sounds;
 }
 
+export function toBase64(bytes) {
+	return btoa(String.fromCharCode(...bytes));
+}
+
 export function fromBase64(text) {
 	return Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
 }

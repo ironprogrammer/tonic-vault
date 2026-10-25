@@ -1,6 +1,6 @@
 # tonic vault
 
-A browser app for the Teenage Engineering PO-32 Tonic. It imports patterns and sounds from the Tonic's transfer audio into a named, tagged library, plays patterns back through [libpo32](https://github.com/ericlewis/libpo32)'s synth, and sends a chosen set of patterns back to the device.
+A browser app for the Teenage Engineering PO-32 Tonic. It imports patterns and sounds from the Tonic's transfer audio into a named, tagged library, plays patterns back through [libpo32](https://github.com/ericlewis/libpo32)'s synth, and sends a chosen set of patterns back to the device. A pattern also saves as a .mid or .wav, or goes out as a link that plays it for anyone, no vault needed.
 
 Open it at https://ironprogrammer.com/tonic-vault/ and add it to your home screen to use it offline. The library lives in your browser. Use save and load to back it up or move it to another device.
 

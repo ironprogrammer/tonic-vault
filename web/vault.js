@@ -1,5 +1,6 @@
 // The vault document: decoding a transfer's packets into sounds and patterns, and merging them in.
 
+import { toBase64 } from './pattern.js';
 import { TAG } from './po32.js';
 
 const STORAGE_KEY = 'tonic-vault';
@@ -47,10 +48,6 @@ export function loadVault(storage = globalThis.localStorage) {
 
 export function saveVault(vault, storage = globalThis.localStorage) {
 	storage.setItem(STORAGE_KEY, JSON.stringify(vault));
-}
-
-function toBase64(bytes) {
-	return btoa(String.fromCharCode(...bytes));
 }
 
 async function hash(bytes) {

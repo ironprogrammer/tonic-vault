@@ -107,7 +107,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Done: download or share a pattern's .mid from the pattern page. It's one bar at 480 ticks per quarter note on channel 1, ending exactly on the bar so a DAW loops it at one bar. Sounds 1 to 16 play notes 36 to 51 (C1 up, the drum pad layout), accents set velocity, multipliers become repeated hits, and swing is baked into note timing. Parameter locks and effects are left out so the file stays plain.
    - Done: measure the Tonic's swing from a line-out recording, so playback and MIDI use its real timing.
    - Done: render four bars of a pattern to .wav, to download or share.
-   - Share links. The link's `#fragment` carries the pattern, its sounds, name, bpm, and swing (about 2 KB), and opens a page where anyone can play it and get its .mid or .wav without a vault.
+   - Done: share links. The pattern page's link button copies (or on a phone, shares) `pattern.html#<fragment>`. The fragment carries the pattern, the patches and names of the sounds it plays, its name, bpm, and swing as length-prefixed bytes in base64url, about 600 characters for a two-sound pattern. Opening it plays the pattern and offers its .mid and .wav without reading or writing the vault.
 5. **Later.** Editing the chain on export, decoding the effect bytes, naming a sound pack's sounds, playing pitch locks in the browser, and rendering a pattern's sounds as one-shot .wav files to load into a DAW's drum pads.
 6. **Someday.** Importing a shared link's pattern into your own vault. Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
 

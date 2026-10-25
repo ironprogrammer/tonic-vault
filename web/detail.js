@@ -1,16 +1,29 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
+import { packLink, unpackLink } from './link.js';
 import { patternMidi } from './midi.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
 import { addToExport, isNew, loadVault, patternName, saveVault, shortDate } from './vault.js';
-import { sendFile, SHARE_ICON, SHARES } from './share.js';
+import { sendFile, sendLink, SHARE_ICON, SHARES } from './share.js';
 import { toWav } from './wav.js';
 
 const $ = (id) => document.getElementById(id);
 const vault = loadVault();
-const pattern = vault.patterns.find((p) => p.id === new URLSearchParams(location.search).get('id'));
+// A shared link's #fragment carries its own pattern and sounds, which play here without touching the vault.
+const link = location.hash.length > 1 ? readLink(location.hash.slice(1)) : null;
+const pattern = link ? link.pattern : vault.patterns.find((p) => p.id === new URLSearchParams(location.search).get('id'));
+
+function readLink(fragment) {
+	try {
+		return unpackLink(fragment);
+	} catch (e) {
+		console.error(e);
+		$('missing').textContent = 'that link is broken or cut short.';
+		return { pattern: null };
+	}
+}
 
 function save() {
-	saveVault(vault);
+	if (!link) saveVault(vault);
 }
 
 function cell(className, content = '') {
@@ -111,19 +124,23 @@ function setPlayIcon(playing) {
 addEventListener('pageshow', (e) => {
 	if (e.persisted) location.reload();
 });
+addEventListener('hashchange', () => location.reload());
 
 if (!pattern) {
 	$('detail').hidden = true;
 	$('missing').hidden = false;
 } else {
 	const parsed = parsePattern(fromBase64(pattern.raw));
-	const set = vault.soundSets.find((s) => s.id === pattern.soundSetId);
+	const set = link ? link.set : vault.soundSets.find((s) => s.id === pattern.soundSetId);
 	const playable = playableSoundSet(set);
 	document.title = `Tonic vault ${patternName(pattern, vault)}`;
-	$('meta').textContent = [`slot ${pattern.slot}`, set ? `sounds ${set.name || shortDate(set.firstSeen)}` : 'sounds missing', shortDate(pattern.firstSeen)].join(' · ');
-	$('new').hidden = !isNew(vault, pattern);
+	$('meta').textContent = link
+		? `slot ${pattern.slot} · shared link`
+		: [`slot ${pattern.slot}`, set ? `sounds ${set.name || shortDate(set.firstSeen)}` : 'sounds missing', shortDate(pattern.firstSeen)].join(' · ');
+	$('new').hidden = link || !isNew(vault, pattern);
 	$('name').value = pattern.name;
 	$('name').placeholder = patternName({ ...pattern, name: '' }, vault);
+	$('name').readOnly = Boolean(link);
 	$('name').addEventListener('change', () => { pattern.name = $('name').value.trim(); save(); });
 
 	// The player reads pattern.bpm and pattern.swing every step, so edits apply while it plays.
@@ -143,7 +160,10 @@ if (!pattern) {
 	});
 
 	renderGrid(parsed, set);
-	renderTags();
+	if (link) {
+		$('tags').hidden = true;
+		$('vault-actions').hidden = true;
+	} else renderTags();
 	setPlayIcon(false);
 	$('play').disabled = !playable;
 	$('no-sounds').hidden = Boolean(playable);
@@ -154,6 +174,12 @@ if (!pattern) {
 			if (step === null) setPlayIcon(false);
 		});
 		setPlayIcon(true);
+	});
+	// The link takes the bpm and swing as they are now.
+	$('link').hidden = !playable;
+	$('link').addEventListener('click', () => {
+		const name = patternName(pattern, vault);
+		sendLink(`${location.origin}${location.pathname}#${packLink(pattern, set, name)}`, name, $('link'));
 	});
 	if (SHARES) {
 		for (const id of ['midi', 'wav']) {
