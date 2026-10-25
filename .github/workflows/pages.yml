@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The pinned commit lives on libpo32's PR #20, which a plain submodule update can't reach.
       - name: Fetch libpo32 at the pinned commit
@@ -28,7 +28,7 @@ jobs:
           git -C vendor/libpo32 fetch --quiet origin pull/20/head
           git -C vendor/libpo32 checkout --quiet "$sha"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
 
@@ -41,7 +41,7 @@ jobs:
       - name: Collect the site
         run: rsync -a --exclude Makefile --exclude '*.c' --exclude test web/ _site/
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
 
   deploy:
     needs: build
@@ -51,4 +51,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
