@@ -182,6 +182,7 @@ main > p:empty { display: none; }
 .links { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-top: 8px; border-top: 1px solid var(--faint); }
 .links a { color: var(--dim); }
 .links p { flex-basis: 100%; margin: 0; }
+.links .credit { margin-top: 16px; text-align: center; }
 
 .connections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .connection { display: flex; flex-direction: column; align-items: center; gap: 10px; height: auto; padding: 16px 8px 12px; border: 1px solid var(--line); background: transparent; color: var(--cream); font-weight: 300; }

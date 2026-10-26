@@ -139,4 +139,5 @@ The Tonic has 3.5mm stereo line in and line out. It also has a built-in speaker 
 - **Sample rate:** the decoder takes the rate as a parameter. A 44.1 kHz demo frame resampled to 48 kHz stereo decoded to identical bytes, so pass the AudioContext rate through rather than resampling.
 - **Sounds need company:** a transfer with sounds must also carry a pattern and a state packet, or the Tonic shows err.
 - **Trailing carrier:** append about 4 bytes of carrier after the final tail when rendering, or the Tonic rejects the transfer at the very end (see Phase 0).
+- **Audio apps holding the jack:** on a Mac, any app holding the headset jack's output, such as a DAW like Logic even when idle, loads the Tonic's line out about 34 dB down. Imports and line-out recordings come in near silent. Quit it first; `pmset -g assertions | grep -B1 "Resources: audio"` names the process. The player closes its AudioContext when idle for the same reason.
 - **Untested inputs:** the over-the-air path and phone capture are less reliable. Get the cable path working first.

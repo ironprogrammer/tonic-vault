@@ -97,13 +97,14 @@ function renderMeter(levels) {
 	}));
 }
 
-// Transfers decoded reliably with peaks around 15% and up; 8% lost the signal partway.
-function levelText(peak) {
+// Whether the decoder keeps its lock is the real test, since peaks near 8% have both decoded and lost lock.
+// Only clipping, silence, and a faint signal the decoder hasn't locked onto get a hint.
+function levelText(peak, synced) {
 	const pct = Math.round(peak * 100);
 	if (peak > 0.98) return `level ${pct}% · too loud, lower the volume`;
 	if (peak < 0.01) return 'no signal';
-	if (peak < 0.12) return `level ${pct}% · low, raise the volume or close apps using the jack`;
-	return `level ${pct}% · ok`;
+	if (!synced && peak < 0.05) return `level ${pct}% · faint, raise the volume or close apps using the jack`;
+	return `level ${pct}%`;
 }
 
 async function listen() {
@@ -142,7 +143,7 @@ async function listen() {
 			renderMeter(levels);
 			renderStages(packets, synced);
 			if (started) $('elapsed').textContent = `${((performance.now() - started) / 1000).toFixed(1)}s`;
-			$('level').textContent = levelText(Math.max(...levels.slice(-20)));
+			$('level').textContent = levelText(Math.max(...levels.slice(-20)), synced);
 			batches++;
 			if (synced) {
 				lastSynced = batches;

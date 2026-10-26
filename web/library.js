@@ -130,7 +130,7 @@ function playButton(pattern, parsed) {
 function renderPatterns() {
 	const rows = visiblePatterns().map((p) => {
 		const parsed = parsePattern(fromBase64(p.raw));
-		const meta = [`slot ${p.slot}`, shortDate(p.firstSeen), ...p.tags].join(' · ');
+		const meta = [`from slot ${p.slot}`, shortDate(p.firstSeen), ...p.tags].join(' · ');
 		const box = el('input', { type: 'checkbox', 'aria-label': `select ${patternName(p, vault)}` });
 		box.checked = selected.has(p.id);
 		box.addEventListener('change', () => {

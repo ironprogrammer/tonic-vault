@@ -138,7 +138,7 @@ if (!pattern) {
 	document.title = `Tonic vault ${patternName(pattern, names)}`;
 	$('meta').textContent = link
 		? 'shared link · factory sounds'
-		: [`slot ${pattern.slot}`, set ? `sounds ${set.name || shortDate(set.firstSeen)}` : 'sounds missing', shortDate(pattern.firstSeen)].join(' · ');
+		: [`from slot ${pattern.slot}`, set ? `sounds ${set.name || shortDate(set.firstSeen)}` : 'sounds missing', shortDate(pattern.firstSeen)].join(' · ');
 	$('new').hidden = link || !isNew(vault, pattern);
 	$('name').value = pattern.name;
 	$('name').placeholder = patternName({ ...pattern, name: '' }, names);
