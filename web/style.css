@@ -26,6 +26,10 @@ main {
 	gap: 24px;
 }
 
+@media (display-mode: standalone) {
+	main { padding-top: 34px; }
+}
+
 h1 { margin: 0; font-size: 34px; font-weight: 300; line-height: 1; }
 .title { display: flex; align-items: center; gap: 10px; }
 h2 { margin: 0 0 10px; font-size: 22px; font-weight: 300; }
@@ -105,7 +109,7 @@ main > p:empty { display: none; }
 .action .big { font-weight: 300; line-height: 1; }
 .small-keys { display: flex; align-items: center; gap: 4px; font-size: 20px; }
 
-.kit { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.kit { display: grid; touch-action: manipulation; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
 .kit button { display: flex; align-items: center; height: auto; min-height: 48px; padding: 6px 9px; border: none; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: transparent; color: var(--cream); text-align: left; font-weight: 300; font-size: 17px; }
 .kit button:active { background: var(--cream); color: var(--ground); }
 

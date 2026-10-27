@@ -74,7 +74,9 @@ function renderKit() {
 			type: 'button',
 			class: name ? 'named' : '',
 			'aria-label': `hear sound ${i + 1}${name ? `, ${name}` : ''}`,
-			onclick: () => player.audition(playable, i + 1),
+			// Pads play on touch down like an instrument. Keyboard presses report click detail 0 and play on click instead.
+			onpointerdown: (e) => { if (e.button === 0) player.audition(playable, i + 1); },
+			onclick: (e) => e.detail === 0 ? player.audition(playable, i + 1) : player.resume(),
 		}, ...(name ? [el('span', { class: 'dim tiny' }, String(i + 1)), el('span', { class: 'ellipsis' }, name)] : [String(i + 1)]));
 		button.disabled = !playable.patches[i + 1]?.right;
 		return button;

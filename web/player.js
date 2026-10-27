@@ -102,6 +102,11 @@ export function createPlayer(synth) {
 			ctx = null;
 		},
 
+		// Starts a context that a touch made but couldn't start, since iOS only lets a tap's end start audio.
+		resume() {
+			ctx?.resume();
+		},
+
 		// Plays one sound at the given morph value (0-255).
 		audition(soundSet, sound, morph = 0) {
 			stop();
