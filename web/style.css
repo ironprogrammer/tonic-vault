@@ -27,7 +27,7 @@ main {
 }
 
 @media (display-mode: standalone) {
-	main { padding-top: 34px; }
+	main { padding-top: 19px; }
 }
 
 h1 { margin: 0; font-size: 34px; font-weight: 300; line-height: 1; }
