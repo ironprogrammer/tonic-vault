@@ -1,9 +1,18 @@
 import { player, PLAY_ICON, STOP_ICON } from './audio.js';
 import { fromBase64, parsePattern, playableSoundSet } from './pattern.js';
-import { addToExport, emptyVault, isNew, loadVault, patternName, saveVault, shortDate, unsavedPatterns, upgradeVault } from './vault.js';
+import { unpackLink } from './link.js';
+import { addToExport, emptyVault, hasVault, isNew, loadVault, patternName, saveLinked, saveVault, shortDate, unsavedPatterns, upgradeVault } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 let vault = loadVault();
+
+// A first visit starts with factory sounds and a pattern to play. It counts as backed up so it never asks for a save.
+const DEMO = unpackLink('AXIAF25ldmVyIGdvbm5hIGdpdmUgeW91IHVw0wcRADExETExABEAMQARAAAxL1MAAH49fj0vU31Sfj0AAC9TAAB9UgAAL1MAAAAAfj0AAAAAAQAAAAAAAAABAAAAAAAAAAAAAAApGwAAAAAAAAAAAAAAAAAAKRsAAAAAAAARABEAEQARABEAEQARABEAwQIAAKffAADBAgAAp98AAMECAACn3wAAwQIAAKffAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEQAAAAAAAAAAALEAAAAAAAA');
+if (!hasVault()) {
+	await saveLinked(vault, { ...DEMO, set: { ...DEMO.set, name: 'factory' } });
+	vault.savedAt = new Date().toISOString();
+	saveVault(vault);
+}
 const FILTER_KEY = 'tonic-vault-filter';
 const SEARCH_KEY = 'tonic-vault-search';
 let filter = readFilter();
@@ -262,4 +271,4 @@ addEventListener('pageshow', (e) => {
 render();
 
 // Asks the browser not to clear the vault when it's short on space or the site goes unvisited, once there's something to lose.
-if (vault.patterns.length) navigator.storage?.persisted?.().then((kept) => kept || navigator.storage.persist());
+if (vault.patterns.some((p) => p.raw !== DEMO.pattern.raw)) navigator.storage?.persisted?.().then((kept) => kept || navigator.storage.persist());

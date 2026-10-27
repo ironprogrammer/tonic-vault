@@ -37,6 +37,15 @@ function emptyExport() {
 	return { slots: Array(16).fill(null), pending: [], soundSetId: null, sendState: false };
 }
 
+// Whether this browser has stored a vault yet, even an emptied one.
+export function hasVault(storage = globalThis.localStorage) {
+	try {
+		return storage?.getItem(STORAGE_KEY) != null;
+	} catch {
+		return true;
+	}
+}
+
 export function loadVault(storage = globalThis.localStorage) {
 	try {
 		const json = storage?.getItem(STORAGE_KEY);
