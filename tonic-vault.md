@@ -96,21 +96,27 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
    - Chains are transferred, in the state packet (see Device model). The first Tonic capture's chain was a single pattern (6).
 1. **Import.** WASM build of libpo32, then browser capture → decode → dedupe → vault JSON. Working: a full Tonic transfer imported in Chrome on 10.22 (`web/`, served at https://tonic-vault.test).
 2. **Library and playback.** The screens from the mock, with playback through the WASM synth. Installable as a PWA so it works on a phone.
-   - Working: the library (`index.html`) and pattern detail (`pattern.html`), with sounds you can audition and patterns that loop through libpo32's synth. Morph, accents, multipliers, and the four channels cutting off their own hits all play. Pitch locks, effects, and add to export don't yet.
+   - Working: the library (`index.html`) and pattern detail (`pattern.html`), with sounds you can audition and patterns that loop through libpo32's synth. Morph, accents, multipliers, and the four channels cutting off their own hits all play. Pitch locks and effects play only on the Tonic (see Maybe).
    - The library asks the browser to keep its storage (`navigator.storage.persist()`) and, once a pattern has gone a week without a .json save, says how many patterns aren't backed up. Saving records `savedAt` in the vault and the file, and loading a file counts as saved.
    - Swing and multiplier timing were measured from line-out recordings on 10.25. Swing delays odd steps by swing/24 of a step (ticks of a 96 ppqn clock). A multiplier's repeats stay a straight step/multiplier apart from the swung hit, and the next hit on the channel cuts off the rest.
-   - Still to do: checking playback against the Tonic by ear (slot 2 has a new pattern from 10.23 to compare after the next import).
+   - Playback matches the Tonic by ear (checked 10.28).
 3. **Export.** Compose the patterns to send, render the transfer audio, play it into the Tonic, and download it as a WAV.
    - Built (`export.html`): the slot grid, sounds and tempo/swing/chain options, send with progress and stop, and the backup .wav. "Add to export" in the library and pattern detail puts patterns in their last slot, or queues them for the export screen to place when that slot is taken. A test renders an export and decodes it back to the same packets.
    - Worked on the Tonic on 10.24: three patterns sent over the cable to its line in. Not built: editing the chain (it's the sent slots in order).
    - Sending the state packet also sets the Tonic's knob positions. They come from the sound set's last state packet, which the vault only stores from imports made after 10.23; without one, libpo32's defaults are sent.
-4. **MIDI and sharing.** Next after hosting, in this order:
+4. **MIDI and sharing.** Done, which closes the first sprint (10.28):
    - Done: download or share a pattern's .mid from the pattern page. It's one bar at 480 ticks per quarter note on channel 1, ending exactly on the bar so a DAW loops it at one bar. Sounds 1 to 16 play notes 36 to 51 (C1 up, the drum pad layout), accents set velocity, multipliers become repeated hits, and swing is baked into note timing. Parameter locks and effects are left out so the file stays plain.
    - Done: measure the Tonic's swing from a line-out recording, so playback and MIDI use its real timing.
    - Done: render four bars of a pattern to .wav, to download or share.
    - Done: share links. The pattern page's link button, below the pattern, copies (or on a phone, shares) `pattern.html#<fragment>`. The fragment carries the pattern payload, name, bpm, and swing as length-prefixed bytes in base64url, about 300 characters. Links always play with the factory sound set, which ships in `factory.js` (taken from the fixture), and a pattern on other sounds says so under the button. Opening a link plays the pattern and offers its .mid and .wav without touching the vault until "save to my vault", which imports it like a transfer so it keeps the pattern id it has in the sender's vault. Sharing a sound set is a separate feature for later.
-5. **Later.** Editing the chain on export, decoding the effect bytes, naming a sound pack's sounds, playing pitch locks in the browser, and rendering a pattern's sounds as one-shot .wav files to load into a DAW's drum pads.
-6. **Someday.** Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
+5. **Next.** Naming a sound pack's sounds. TE's packs publish no names, so each set starts with 16 blanks.
+6. **Possible next.** Editing the chain on export. Today it's the sent slots in order.
+7. **Maybe.**
+   - Playing pitch locks in the browser. libpo32's synth has no pitch input and calls the pair's first byte `flag`, so it needs the pitch knob's mapping measured from line-out recordings at a few knob positions, the way swing was.
+   - Playing effects. libpo32 has none, and the effect bytes are only partly decoded (see `libpo32-followups.md`). The vault already keeps them, resends them unchanged, and shows which steps have one.
+   - Rendering a pattern's sounds as one-shot .wav files to load into a DAW's drum pads.
+   - Sharing a sound set, since share links only carry factory sounds.
+8. **Someday.** Sync to a WordPress plugin over the REST API, served to a logged-in user with cookie + nonce auth so no secrets end up in the bundle.
 
 ## Development
 
