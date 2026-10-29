@@ -101,9 +101,9 @@ function renderMeter(levels) {
 // Only clipping, silence, and a faint signal the decoder hasn't locked onto get a hint.
 function levelText(peak, synced) {
 	const pct = Math.round(peak * 100);
-	if (peak > 0.98) return `level ${pct}% · too loud, lower the volume`;
+	if (peak > 0.98) return `level ${pct}% · too loud, lower the input level`;
 	if (peak < 0.01) return 'no signal';
-	if (!synced && peak < 0.05) return `level ${pct}% · faint, raise the volume or close apps using the jack`;
+	if (!synced && peak < 0.05) return `level ${pct}% · faint, check tonic volume 16`;
 	return `level ${pct}%`;
 }
 
