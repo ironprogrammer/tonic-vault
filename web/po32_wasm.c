@@ -15,6 +15,30 @@
 #define OUTPUT_CAPACITY (48000 * 4)
 #define FRAME_CAPACITY 8192
 
+/* libpo32's license, compiled in so the notice ships with every copy of po32.wasm. */
+static const char license[] =
+	"MIT License\n"
+	"\n"
+	"Copyright (c) 2026 Eric Lewis\n"
+	"\n"
+	"Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+	"of this software and associated documentation files (the \"Software\"), to deal\n"
+	"in the Software without restriction, including without limitation the rights\n"
+	"to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
+	"copies of the Software, and to permit persons to whom the Software is\n"
+	"furnished to do so, subject to the following conditions:\n"
+	"\n"
+	"The above copyright notice and this permission notice shall be included in all\n"
+	"copies or substantial portions of the Software.\n"
+	"\n"
+	"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+	"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
+	"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
+	"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
+	"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
+	"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
+	"SOFTWARE.\n";
+
 static float input[INPUT_CAPACITY];
 static po32_demodulator_t demod;
 static po32_packet_t packets[PACKET_CAPACITY];
@@ -46,6 +70,8 @@ static int on_packet(const po32_packet_t *pkt, void *user) {
 	if (stored < PACKET_CAPACITY) packets[stored++] = *pkt;
 	return 0;
 }
+
+EXPORT("license_notice") const char *license_notice(void) { return license; }
 
 EXPORT("input_buffer") float *input_buffer(void) { return input; }
 EXPORT("input_capacity") int input_capacity(void) { return INPUT_CAPACITY; }

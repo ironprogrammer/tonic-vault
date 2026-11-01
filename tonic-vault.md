@@ -75,7 +75,7 @@ Import and export are named from the app's side. On import the Tonic sends ("tra
 - **Pattern detail:** a sound-rows × 16-step grid showing hits, parameter locks, multipliers (the number on the hit), an accent row, an effects row, and the playhead. Name, tags, editable bpm/swing, delete.
   - Effects show only which steps have one, until the effect bytes are decoded. Playback doesn't reproduce effects, and the screen says so.
   - "Add to export" opens a slot picker with the pattern's last slot preselected and slots already taken in the export marked.
-- **Style:** follow TE's PO-32 guide aesthetic: ochre ground, light hairlines, and thin lowercase type. Text and icons are cream instead of the guide's grey for contrast. Use the guide's own held key, pressed key, mic, and jack artwork, since it matches the device's buttons.
+- **Style:** follow TE's PO-32 guide aesthetic: ochre ground, light hairlines, and thin lowercase type. Text and icons are cream instead of the guide's grey for contrast. Use the guide's own key, mic, and jack artwork, since it matches the device's buttons.
 - **Terms:** use the PO-32 guide's words for everything on the device: sounds, pattern, slot, accent, tempo, swing, multiplier, parameter lock, chain, transfer data, receive data, receive mode, backup, and restore. Button combos are written as the guide writes them ("press write + sound"). Each sound set stores its own 16 sound names. A factory set (recognized by its sound set id, which matches the test fixture's) starts with the guide's names, such as "shaker / zap" and "close / open hi-hat". Sound packs publish no names, so their sounds go by number (1–16) until named. Editing the names could come later.
 
 ## Phases

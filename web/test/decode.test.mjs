@@ -115,3 +115,9 @@ test('an exported transfer decodes back to the same packets', async () => {
 	assert.equal(out.done, true);
 	assert.deepEqual(out.packets.map((p) => [p.tag, [...p.payload]]), plan.packets.map((p) => [p.tag, [...p.payload]]));
 });
+
+test('po32.wasm carries libpo32\'s license', async () => {
+	const wasm = await readFile(wasmUrl);
+	const license = await readFile(new URL('../../vendor/libpo32/LICENSE', import.meta.url));
+	assert.ok(wasm.includes(license));
+});

@@ -26,4 +26,10 @@ make -C web test
 
 Building `po32.wasm` needs Homebrew's `llvm` and `lld`. Pushes to `main` build, test, and deploy to GitHub Pages.
 
+## Credits
+
+[libpo32](https://github.com/ericlewis/libpo32), copyright (c) 2026 Eric Lewis and MIT licensed, provides the transfer protocol and drum synth, compiled here into `po32.wasm`.
+
+The key, mic, jack, and device icons come from Teenage Engineering's [PO-32 guide](https://teenage.engineering/guides/po-32/en).
+
 MIT licensed. PO-32 Tonic is a trademark of Teenage Engineering. This is an unofficial tool, not made or endorsed by them.
