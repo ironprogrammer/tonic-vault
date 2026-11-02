@@ -1,4 +1,4 @@
-# Native builds of libpo32's example tools, plus diag, for the Phase 0 device tests.
+# Native builds of libpo32's example tools, plus diag, for testing against the Tonic.
 # cmake isn't required; clang is called directly.
 
 CC := /usr/bin/clang

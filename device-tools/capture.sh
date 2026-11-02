@@ -1,6 +1,6 @@
 #!/bin/sh
 # Record from the default macOS input until a Tonic transfer finishes (or the time limit), then decode it.
-# Usage: phase0/capture.sh <name> [max seconds, default 90]
+# Usage: device-tools/capture.sh <name> [max seconds, default 90]
 set -e
 [ -n "$1" ] || { echo "usage: $0 <name> [seconds]" >&2; exit 2; }
 dir=$(cd "$(dirname "$0")" && pwd)
