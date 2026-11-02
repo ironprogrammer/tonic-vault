@@ -1,3 +1,4 @@
-phase0/build/
-phase0/captures/
+device-tools/build/
+device-tools/captures/
 web/po32.wasm
+.planning/
